@@ -1,5 +1,7 @@
 import {
   article,
+  figure,
+  figcaption,
   img,
   section,
   span,
@@ -48,18 +50,39 @@ function accountHtml(account) {
   );
 }
 
+function attachementHtml(attachement) {
+  const { type, preview_url, meta, description } = attachement;
+  const { width, height } = meta.small;
+  switch (type) {
+    case "image":
+      return figure(
+        img({ alt: description, src: preview_url, width, height }) +
+          figcaption(description)
+      );
+    case "video":
+      return figure(
+        video({ controls: true, src: preview_url, width, height }) +
+          figcaption(description)
+      );
+  }
+}
+
+const htmlAttachementList = (as) => as.map(attachementHtml).join("");
+
 async function showPublicTimeline() {
   const response = await fetch(`https://${server}/api/v1/timelines/public`);
   const statuses = await response.json();
   for (const status of statuses) {
-    const { created_at, content, account } = status;
+    const { created_at, content, account, media_attachments } = status;
     timelineElement.insertAdjacentHTML(
       "beforeend",
       article(
         section(
           ["metadata"],
           accountHtml(account) + " " + dateHtml(created_at)
-        ) + section(content)
+        ) +
+          section(content) +
+          section(htmlAttachementList(media_attachments))
       )
     );
   }

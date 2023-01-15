@@ -1,3 +1,5 @@
+import { article, time, section } from "https://unpkg.com/ez-html-elements";
+
 const SERVER_KEY = "server";
 let server = localStorage.getItem(SERVER_KEY);
 
@@ -27,15 +29,13 @@ async function showPublicTimeline() {
   const statuses = await response.json();
   for (const status of statuses) {
     const { created_at, content } = status;
-    const statusElement = document.createElement("article");
-    const dateElement = document.createElement("date");
-    const contentElement = document.createElement("section");
-    dateElement.innerText = `${dateView(created_at)} ago`;
-    dateElement.setAttribute("datetime", created_at);
-    contentElement.innerHTML = content;
-    statusElement.append(dateElement);
-    statusElement.append(contentElement);
-    timelineElement.append(statusElement);
+    timelineElement.insertAdjacentHTML(
+      "beforeend",
+      article(
+        section(time({ datetime: created_at }, dateView(created_at) + " ago")) +
+          section(content)
+      )
+    );
   }
 }
 

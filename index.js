@@ -1,4 +1,9 @@
-import { article, time, section } from "https://unpkg.com/ez-html-elements";
+import {
+  article,
+  img,
+  section,
+  time,
+} from "https://unpkg.com/ez-html-elements";
 
 const SERVER_KEY = "server";
 let server = localStorage.getItem(SERVER_KEY);
@@ -27,6 +32,21 @@ function dateView(dateString) {
 const dateHtml = (dateString) =>
   time({ datetime: dateString }, dateView(dateString) + " ago");
 
+function accountHtml(account) {
+  const { avatar, username, acct, display_name, followers_count } = account;
+  const accountServer = acct.replace(/^[^@]+@/, "");
+  const avatarSize = Math.sqrt(followers_count);
+  return (
+    img({ src: avatar, width: avatarSize, height: avatarSize }) +
+    " @" +
+    username +
+    img({ src: `https://${accountServer}/favicon.ico` }, ["favicon"]) +
+    " (" +
+    display_name +
+    ")"
+  );
+}
+
 async function showPublicTimeline() {
   const response = await fetch(`https://${server}/api/v1/timelines/public`);
   const statuses = await response.json();
@@ -34,7 +54,10 @@ async function showPublicTimeline() {
     const { created_at, content, account } = status;
     timelineElement.insertAdjacentHTML(
       "beforeend",
-      article(section(dateHtml(created_at)) + section(content))
+      article(
+        section(accountHtml(account) + " " + dateHtml(created_at)) +
+          section(content)
+      )
     );
   }
 }

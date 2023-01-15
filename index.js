@@ -2,6 +2,7 @@ import {
   article,
   img,
   section,
+  span,
   time,
 } from "https://unpkg.com/ez-html-elements";
 
@@ -38,12 +39,12 @@ function accountHtml(account) {
   const avatarSize = Math.sqrt(followers_count);
   return (
     img({ src: avatar, width: avatarSize, height: avatarSize }) +
-    " @" +
-    username +
-    img({ src: `https://${accountServer}/favicon.ico` }, ["favicon"]) +
-    " (" +
-    display_name +
-    ")"
+    span(
+      " @" +
+        username +
+        img({ src: `https://${accountServer}/favicon.ico` }, ["favicon"])
+    ) +
+    display_name
   );
 }
 
@@ -55,8 +56,10 @@ async function showPublicTimeline() {
     timelineElement.insertAdjacentHTML(
       "beforeend",
       article(
-        section(accountHtml(account) + " " + dateHtml(created_at)) +
-          section(content)
+        section(
+          ["metadata"],
+          accountHtml(account) + " " + dateHtml(created_at)
+        ) + section(content)
       )
     );
   }

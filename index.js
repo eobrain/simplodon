@@ -24,17 +24,17 @@ function dateView(dateString) {
   return `${days} days`;
 }
 
+const dateHtml = (dateString) =>
+  time({ datetime: dateString }, dateView(dateString) + " ago");
+
 async function showPublicTimeline() {
   const response = await fetch(`https://${server}/api/v1/timelines/public`);
   const statuses = await response.json();
   for (const status of statuses) {
-    const { created_at, content } = status;
+    const { created_at, content, account } = status;
     timelineElement.insertAdjacentHTML(
       "beforeend",
-      article(
-        section(time({ datetime: created_at }, dateView(created_at) + " ago")) +
-          section(content)
-      )
+      article(section(dateHtml(created_at)) + section(content))
     );
   }
 }

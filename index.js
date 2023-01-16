@@ -4,6 +4,7 @@ import {
   figure,
   figcaption,
   h2,
+  h3,
   img,
   p,
   section,
@@ -44,14 +45,18 @@ function accountHtml (account) {
   const { avatar, username, url, display_name: displayName } = account
   const accountServer = url.match(/https:\/\/([^/]+)\//)[1]
 
-  return h2(
-    ' @' +
-      username +
-      ' ' +
-      img({ src: avatar }) +
-      img({ src: `https://${accountServer}/favicon.ico` }) +
-      ' ' +
-      displayName
+  return (
+    h2(
+      ' @' +
+        username +
+        img({ src: avatar, alt: `avatar of ${username}` }) +
+        ' @' +
+        accountServer +
+        img({
+          src: `https://${accountServer}/favicon.ico`,
+          alt: `avatar of ${accountServer}`
+        })
+    ) + h3(displayName)
   )
 }
 

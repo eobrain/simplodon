@@ -31,29 +31,25 @@ function dateView (dateString) {
 const dateHtml = (dateString) =>
   p(time({ datetime: dateString }, dateView(dateString)))
 
-class Account {
-  constructor (json) {
-    Object.assign(this, json)
-  }
-
-  html () {
-    const server = this.url.match(/https:\/\/([^/]+)\//)[1]
+function makeAccount (account) {
+  function html () {
+    const server = account.url.match(/https:\/\/([^/]+)\//)[1]
 
     return p(
-      img({ src: this.avatar, alt: `avatar of ${this.username}` }) +
+      img({ src: account.avatar, alt: `avatar of ${account.username}` }) +
         img({
           src: `https://${server}/favicon.ico`,
           alt: `avatar of ${server}`
         }) +
-        strong(' @' + this.username + '@' + server) +
+        strong(' @' + account.username + '@' + server) +
         ' ' +
-        em(this.displayName)
+        em(account.display_name)
     )
   }
 
-  sameId (id) {
-    return id === this.id
-  }
+  const sameId = (id) => id === account.id
+
+  return Object.freeze({ html, sameId })
 }
 
 function attachementHtml (attachement) {
@@ -92,7 +88,7 @@ class Status {
       this.content,
       p(em(dateHtml(this.created_at)))
     )
-    const account = new Account(this.account)
+    const account = makeAccount(this.account)
     const accountSection = account.sameId(this.in_reply_to_account_id)
       ? ''
       : section(account.html())

@@ -74,45 +74,42 @@ function attachementHtml (attachement) {
 
 const attachementListHtml = (as) => as.map(attachementHtml).join('')
 
-class Status {
-  constructor (json) {
-    Object.assign(this, json)
-  }
-
-  html () {
+function makeStatus (status) {
+  function html () {
     const mediaSection =
-      this.media_attachments && this.media_attachments.length > 0
-        ? section(attachementListHtml(this.media_attachments))
+      status.media_attachments && status.media_attachments.length > 0
+        ? section(attachementListHtml(status.media_attachments))
         : ''
     const contentSection = section(
-      this.content,
-      p(em(dateHtml(this.created_at)))
+      status.content,
+      p(em(dateHtml(status.created_at)))
     )
-    const account = makeAccount(this.account)
-    const accountSection = account.sameId(this.in_reply_to_account_id)
+    const account = makeAccount(status.account)
+    const accountSection = account.sameId(status.in_reply_to_account_id)
       ? ''
       : section(account.html())
-    const maybeHidden = this.spoiler_text
-      ? details(summary(this.spoiler_text), contentSection + mediaSection)
+    const maybeHidden = status.spoiler_text
+      ? details(summary(status.spoiler_text), contentSection + mediaSection)
       : contentSection + mediaSection
     return accountSection + maybeHidden
   }
 
   /** Recursive */
-  async chain () {
-    if (!this.in_reply_to_id) {
-      return this.html()
+  async function chain () {
+    if (!status.in_reply_to_id) {
+      return html()
     }
     try {
       const response = await fetch(
-        `https://${server}/api/v1/statuses/${this.in_reply_to_id}`
+        `https://${server}/api/v1/statuses/${status.in_reply_to_id}`
       )
       const inReplyTo = await response.json()
-      return (await this.chain(inReplyTo)) + this.html()
+      return (await chain(inReplyTo)) + html()
     } catch {
-      return this.html()
+      return html()
     }
   }
+  return Object.freeze({ chain })
 }
 
 async function showTimeline (querySuffix) {
@@ -122,7 +119,7 @@ async function showTimeline (querySuffix) {
   const statuses = await response.json()
   timelineElement.replaceChildren()
   for (const statusJson of statuses) {
-    const status = new Status(statusJson)
+    const status = makeStatus(statusJson)
     timelineElement.insertAdjacentHTML(
       'beforeend',
       article(await status.chain())

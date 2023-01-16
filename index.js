@@ -16,30 +16,19 @@ import {
 
 const SERVER_KEY = 'server'
 let server = window.localStorage.getItem(SERVER_KEY)
+const DAY_MS = 24 * 60 * 60 * 1000
 
 function dateView (dateString) {
-  const ms = Date.now() - Date.parse(dateString)
-  if (ms < 1500) {
-    return `${ms} ms`
-  }
-  const seconds = Math.round(ms / 1000)
-  if (seconds < 90) {
-    return `${seconds} seconds`
-  }
-  const minutes = Math.round(seconds / 60)
-  if (minutes < 90) {
-    return `${minutes} minutes`
-  }
-  const hours = Math.round(minutes / 60)
-  if (hours < 90) {
-    return `${hours} hours`
-  }
-  const days = Math.round(hours / 24)
-  return `${days} days`
+  const dateMs = Date.parse(dateString)
+  const date = new Date()
+  date.setTime(dateMs)
+  return dateMs > Date.now() - DAY_MS
+    ? date.toLocaleTimeString()
+    : date.toLocaleDateString()
 }
 
 const dateHtml = (dateString) =>
-  p(time({ datetime: dateString }, dateView(dateString) + ' ago:'))
+  p(time({ datetime: dateString }, dateView(dateString)))
 
 function accountHtml (account) {
   const { avatar, username, url, display_name: displayName } = account

@@ -31,20 +31,29 @@ function dateView (dateString) {
 const dateHtml = (dateString) =>
   p(time({ datetime: dateString }, dateView(dateString)))
 
-function accountHtml (account) {
-  const { avatar, username, url, display_name: displayName } = account
-  const accountServer = url.match(/https:\/\/([^/]+)\//)[1]
+class Account {
+  constructor (json) {
+    Object.assign(this, json)
+  }
 
-  return p(
-    img({ src: avatar, alt: `avatar of ${username}` }) +
-      img({
-        src: `https://${accountServer}/favicon.ico`,
-        alt: `avatar of ${accountServer}`
-      }) +
-      strong(' @' + username + '@' + accountServer) +
-      ' ' +
-      em(displayName)
-  )
+  html () {
+    const server = this.url.match(/https:\/\/([^/]+)\//)[1]
+
+    return p(
+      img({ src: this.avatar, alt: `avatar of ${this.username}` }) +
+        img({
+          src: `https://${server}/favicon.ico`,
+          alt: `avatar of ${server}`
+        }) +
+        strong(' @' + this.username + '@' + server) +
+        ' ' +
+        em(this.displayName)
+    )
+  }
+
+  sameId (id) {
+    return id === this.id
+  }
 }
 
 function attachementHtml (attachement) {
@@ -69,42 +78,44 @@ function attachementHtml (attachement) {
 
 const attachementListHtml = (as) => as.map(attachementHtml).join('')
 
-function statusHtml (status) {
-  const {
-    created_at: createdAt,
-    content,
-    account,
-    media_attachments: attachments,
-    in_reply_to_account_id: inReplyToAccountId,
-    spoiler_text: spoilerText
-  } = status
-  const mediaSection =
-    attachments && attachments.length > 0
-      ? section(attachementListHtml(attachments))
-      : ''
-  const contentSection = section(content, p(em(dateHtml(createdAt))))
-  const accountSection =
-    inReplyToAccountId === account.id ? '' : section(accountHtml(account))
-  const maybeHidden = spoilerText
-    ? details(summary(spoilerText), contentSection + mediaSection)
-    : contentSection + mediaSection
-  return accountSection + maybeHidden
-}
-
-/** Recursive */
-async function statusChain (status) {
-  const { in_reply_to_id: inReplyToId } = status
-  if (!inReplyToId) {
-    return statusHtml(status)
+class Status {
+  constructor (json) {
+    Object.assign(this, json)
   }
-  try {
-    const response = await fetch(
-      `https://${server}/api/v1/statuses/${inReplyToId}`
+
+  html () {
+    const mediaSection =
+      this.media_attachments && this.media_attachments.length > 0
+        ? section(attachementListHtml(this.media_attachments))
+        : ''
+    const contentSection = section(
+      this.content,
+      p(em(dateHtml(this.created_at)))
     )
-    const inReplyTo = await response.json()
-    return (await statusChain(inReplyTo)) + statusHtml(status)
-  } catch {
-    return statusHtml(status)
+    const account = new Account(this.account)
+    const accountSection = account.sameId(this.in_reply_to_account_id)
+      ? ''
+      : section(account.html())
+    const maybeHidden = this.spoiler_text
+      ? details(summary(this.spoiler_text), contentSection + mediaSection)
+      : contentSection + mediaSection
+    return accountSection + maybeHidden
+  }
+
+  /** Recursive */
+  async chain () {
+    if (!this.in_reply_to_id) {
+      return this.html()
+    }
+    try {
+      const response = await fetch(
+        `https://${server}/api/v1/statuses/${this.in_reply_to_id}`
+      )
+      const inReplyTo = await response.json()
+      return (await this.chain(inReplyTo)) + this.html()
+    } catch {
+      return this.html()
+    }
   }
 }
 
@@ -114,10 +125,11 @@ async function showTimeline (querySuffix) {
   )
   const statuses = await response.json()
   timelineElement.replaceChildren()
-  for (const status of statuses) {
+  for (const statusJson of statuses) {
+    const status = new Status(statusJson)
     timelineElement.insertAdjacentHTML(
       'beforeend',
-      article(await statusChain(status))
+      article(await status.chain())
     )
   }
 }

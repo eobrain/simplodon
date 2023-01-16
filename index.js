@@ -1,11 +1,13 @@
 import {
   article,
+  details,
   em,
   figure,
   figcaption,
   img,
   p,
   section,
+  summary,
   strong,
   time,
   video
@@ -73,7 +75,8 @@ function statusHtml (status) {
     content,
     account,
     media_attachments: attachments,
-    in_reply_to_account_id: inReplyToAccountId
+    in_reply_to_account_id: inReplyToAccountId,
+    spoiler_text: spoilerText
   } = status
   const mediaSection =
     attachments && attachments.length > 0
@@ -82,7 +85,10 @@ function statusHtml (status) {
   const contentSection = section(content, p(em(dateHtml(createdAt))))
   const accountSection =
     inReplyToAccountId === account.id ? '' : section(accountHtml(account))
-  return accountSection + contentSection + mediaSection
+  const maybeHidden = spoilerText
+    ? details(summary(spoilerText), contentSection + mediaSection)
+    : contentSection + mediaSection
+  return accountSection + maybeHidden
 }
 
 /** Recursive */

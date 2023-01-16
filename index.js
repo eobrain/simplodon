@@ -164,7 +164,11 @@ function makeStatus (status) {
       return _html()
     }
   }
-  return Object.freeze({ chain })
+
+  async function insertAdjacent (parent, position) {
+    parent.insertAdjacentHTML(position, article(await chain()))
+  }
+  return Object.freeze({ chain, insertAdjacent })
 }
 
 async function showTimeline (querySuffix) {
@@ -172,10 +176,7 @@ async function showTimeline (querySuffix) {
   timelineElement.replaceChildren()
   for (const statusJson of statuses) {
     const status = makeStatus(statusJson)
-    timelineElement.insertAdjacentHTML(
-      'beforeend',
-      article(await status.chain())
-    )
+    await status.insertAdjacent(timelineElement, 'beforeend')
   }
 }
 

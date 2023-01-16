@@ -78,10 +78,10 @@ function statusHtml(status) {
     media_attachments && media_attachments.length > 0
       ? section(attachementListHtml(media_attachments))
       : "";
-  return article(
+  return (
     section(["metadata"], accountHtml(account) + " " + dateHtml(created_at)) +
-      section(content) +
-      mediaSection
+    section(content) +
+    mediaSection
   );
 }
 
@@ -109,15 +109,30 @@ async function showPublicTimeline() {
   const statuses = await response.json();
   for (const status of statuses) {
     const { in_reply_to_id } = status;
-    timelineElement.insertAdjacentHTML("beforeend", await statusChain(status));
+    timelineElement.insertAdjacentHTML(
+      "beforeend",
+      article(await statusChain(status))
+    );
   }
 }
 
 async function hasServer() {
   noServerElement.classList.add("hidden");
   headerElement.innerHTML = server;
-  await showPublicTimeline();
+  if (!location.hash) {
+    location.hash = "#public";
+  } else {
+    app();
+  }
 }
+
+async function app() {
+  if (location.hash === "#public") {
+    await showPublicTimeline();
+  }
+}
+
+window.onhashchange = app;
 
 if (server) {
   hasServer();

@@ -39,8 +39,8 @@ const dateHtml = (dateString) =>
   time({ datetime: dateString }, dateView(dateString) + " ago");
 
 function accountHtml(account) {
-  const { avatar, username, acct, display_name, followers_count } = account;
-  const accountServer = acct.replace(/^[^@]+@/, "");
+  const { avatar, username, url, display_name, followers_count } = account;
+  const accountServer = url.match(/https:\/\/([^\/]+)\//)[1];
   const avatarSize = Math.sqrt(followers_count);
   return (
     img({ src: avatar, width: avatarSize, height: avatarSize }) +
@@ -55,6 +55,9 @@ function accountHtml(account) {
 
 function attachementHtml(attachement) {
   const { type, preview_url, meta, description } = attachement;
+  if (!meta.small) {
+    return "";
+  }
   const { width, height } = meta.small;
   switch (type) {
     case "image":
@@ -102,11 +105,12 @@ async function statusChain(status) {
   }
 }
 
-async function showPublicTimeline() {
+async function showTimeline(querySuffix) {
   const response = await fetch(
-    `https://${server}/api/v1/timelines/public?limit=40`
+    `https://${server}/api/v1/timelines/${querySuffix}`
   );
   const statuses = await response.json();
+  timelineElement.replaceChildren();
   for (const status of statuses) {
     const { in_reply_to_id } = status;
     timelineElement.insertAdjacentHTML(
@@ -127,8 +131,13 @@ async function hasServer() {
 }
 
 async function app() {
-  if (location.hash === "#public") {
-    await showPublicTimeline();
+  switch (location.hash) {
+    case "#public":
+      await showTimeline("public?limit=40");
+      break;
+    case "#public/local":
+      await showTimeline("public?limit=40&local=true");
+      break;
   }
 }
 

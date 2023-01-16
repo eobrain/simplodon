@@ -3,9 +3,12 @@ import {
   figure,
   figcaption,
   img,
+  li,
   section,
   span,
   time,
+  ul,
+  video,
 } from "https://unpkg.com/ez-html-elements";
 
 const SERVER_KEY = "server";
@@ -67,24 +70,46 @@ function attachementHtml(attachement) {
   }
 }
 
-const htmlAttachementList = (as) => as.map(attachementHtml).join("");
+const attachementListHtml = (as) => as.map(attachementHtml).join("");
+
+function statusHtml(status) {
+  const { created_at, content, account, media_attachments } = status;
+  const mediaSection =
+    media_attachments && media_attachments.length > 0
+      ? section(attachementListHtml(media_attachments))
+      : "";
+  return article(
+    section(["metadata"], accountHtml(account) + " " + dateHtml(created_at)) +
+      section(content) +
+      mediaSection
+  );
+}
+
+/** Recursive */
+async function statusChain(status) {
+  const { in_reply_to_id } = status;
+  if (!in_reply_to_id) {
+    return statusHtml(status);
+  }
+  try {
+    const response = await fetch(
+      `https://${server}/api/v1/statuses/${in_reply_to_id}`
+    );
+    const inReplyTo = await response.json();
+    return (await statusChain(inReplyTo)) + "🧵" + statusHtml(status);
+  } catch {
+    return statusHtml(status);
+  }
+}
 
 async function showPublicTimeline() {
-  const response = await fetch(`https://${server}/api/v1/timelines/public`);
+  const response = await fetch(
+    `https://${server}/api/v1/timelines/public?limit=40`
+  );
   const statuses = await response.json();
   for (const status of statuses) {
-    const { created_at, content, account, media_attachments } = status;
-    timelineElement.insertAdjacentHTML(
-      "beforeend",
-      article(
-        section(
-          ["metadata"],
-          accountHtml(account) + " " + dateHtml(created_at)
-        ) +
-          section(content) +
-          section(htmlAttachementList(media_attachments))
-      )
-    );
+    const { in_reply_to_id } = status;
+    timelineElement.insertAdjacentHTML("beforeend", await statusChain(status));
   }
 }
 

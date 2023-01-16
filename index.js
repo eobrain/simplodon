@@ -1,13 +1,12 @@
 import {
   article,
-  blockquote,
+  em,
   figure,
   figcaption,
-  h2,
-  h3,
   img,
   p,
   section,
+  strong,
   time,
   video
 } from 'https://unpkg.com/ez-html-elements'
@@ -34,18 +33,15 @@ function accountHtml (account) {
   const { avatar, username, url, display_name: displayName } = account
   const accountServer = url.match(/https:\/\/([^/]+)\//)[1]
 
-  return (
-    h2(
-      ' @' +
-        username +
-        img({ src: avatar, alt: `avatar of ${username}` }) +
-        ' @' +
-        accountServer +
-        img({
-          src: `https://${accountServer}/favicon.ico`,
-          alt: `avatar of ${accountServer}`
-        })
-    ) + h3(displayName)
+  return p(
+    img({ src: avatar, alt: `avatar of ${username}` }) +
+      img({
+        src: `https://${accountServer}/favicon.ico`,
+        alt: `avatar of ${accountServer}`
+      }) +
+      strong(' @' + username + '@' + accountServer) +
+      ' ' +
+      em(displayName)
   )
 }
 
@@ -83,7 +79,7 @@ function statusHtml (status) {
     attachments && attachments.length > 0
       ? section(attachementListHtml(attachments))
       : ''
-  const contentSection = section(dateHtml(createdAt), blockquote(content))
+  const contentSection = section(content, p(em(dateHtml(createdAt))))
   const accountSection =
     inReplyToAccountId === account.id ? '' : section(accountHtml(account))
   return accountSection + contentSection + mediaSection

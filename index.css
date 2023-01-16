@@ -3,8 +3,8 @@
 }
 
 
-h2 img {
-    height: 1em;  
+p > img {
+    height: 2em;  
 }
 
 /*.metadata {

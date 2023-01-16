@@ -131,6 +131,8 @@ function makeAttachement (attachment) {
 const attachmentListHtml = (as) =>
   as.map((a) => makeAttachement(a).html()).join('')
 
+const accordion = (head, body) => details(summary(head), body)
+
 /** Creates a Status object from the JSON returned from the server. */
 function makeStatus (status) {
   function _html () {
@@ -145,7 +147,7 @@ function makeStatus (status) {
       ? ''
       : section(account.html())
     const maybeHidden = status.spoiler_text
-      ? details(summary(status.spoiler_text), contentSection + mediaSection)
+      ? accordion(status.spoiler_text, contentSection + mediaSection)
       : contentSection + mediaSection
     return accountSection + maybeHidden
   }

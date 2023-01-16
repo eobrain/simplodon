@@ -58,17 +58,22 @@ const server = (() => {
   })
 })()
 
-function dateView (dateString) {
-  const dateMs = Date.parse(dateString)
-  const date = new Date()
-  date.setTime(dateMs)
-  return dateMs > Date.now() - DAY_MS
-    ? date.toLocaleTimeString()
-    : date.toLocaleDateString()
-}
+/** Create a date object from a standard string representation */
+function makeDate (dateString) {
+  function _localeString (dateString) {
+    const dateMs = Date.parse(dateString)
+    const date = new Date()
+    date.setTime(dateMs)
+    return dateMs > Date.now() - DAY_MS
+      ? date.toLocaleTimeString()
+      : date.toLocaleDateString()
+  }
 
-const dateHtml = (dateString) =>
-  p(time({ datetime: dateString }, dateView(dateString)))
+  const html = () =>
+    p(time({ datetime: dateString }, _localeString(dateString)))
+
+  return Object.freeze({ html })
+}
 
 /** Create an account object from the JSON returned from the server. */
 function makeAccount (account) {
@@ -121,10 +126,8 @@ function makeStatus (status) {
       status.media_attachments && status.media_attachments.length > 0
         ? section(attachementListHtml(status.media_attachments))
         : ''
-    const contentSection = section(
-      status.content,
-      p(em(dateHtml(status.created_at)))
-    )
+    const createdAt = makeDate(status.created_at)
+    const contentSection = section(status.content, p(em(createdAt.html())))
     const account = makeAccount(status.account)
     const accountSection = account.sameId(status.in_reply_to_account_id)
       ? ''

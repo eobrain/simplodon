@@ -97,34 +97,45 @@ function makeAccount (account) {
   return Object.freeze({ html, sameId })
 }
 
-function attachementHtml (attachement) {
-  const { type, preview_url: previewUrl, meta, description } = attachement
-  if (!meta.small) {
-    return ''
+function makeAttachement (attachment) {
+  function html () {
+    if (!attachment.meta.small) {
+      return ''
+    }
+    const { width, height } = attachment.meta.small
+    switch (attachment.type) {
+      case 'image':
+        return figure(
+          img({
+            alt: attachment.description,
+            src: attachment.preview_url,
+            width,
+            height
+          }) + figcaption(attachment.description)
+        )
+      case 'video':
+        return figure(
+          video({
+            controls: true,
+            src: attachment.preview_url,
+            width,
+            height
+          }) + figcaption(attachment.description)
+        )
+    }
   }
-  const { width, height } = meta.small
-  switch (type) {
-    case 'image':
-      return figure(
-        img({ alt: description, src: previewUrl, width, height }) +
-          figcaption(description)
-      )
-    case 'video':
-      return figure(
-        video({ controls: true, src: previewUrl, width, height }) +
-          figcaption(description)
-      )
-  }
+  return Object.freeze({ html })
 }
 
-const attachementListHtml = (as) => as.map(attachementHtml).join('')
+const attachmentListHtml = (as) =>
+  as.map((a) => makeAttachement(a).html()).join('')
 
 /** Creates a Status object from the JSON returned from the server. */
 function makeStatus (status) {
   function _html () {
     const mediaSection =
       status.media_attachments && status.media_attachments.length > 0
-        ? section(attachementListHtml(status.media_attachments))
+        ? section(attachmentListHtml(status.media_attachments))
         : ''
     const createdAt = makeDate(status.created_at)
     const contentSection = section(status.content, p(em(createdAt.html())))

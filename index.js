@@ -1,11 +1,12 @@
 import {
   article,
+  blockquote,
   figure,
   figcaption,
+  h2,
   img,
   p,
   section,
-  span,
   time,
   video
 } from 'https://unpkg.com/ez-html-elements'
@@ -37,27 +38,20 @@ function dateView (dateString) {
 }
 
 const dateHtml = (dateString) =>
-  time({ datetime: dateString }, dateView(dateString) + ' ago')
+  p(time({ datetime: dateString }, dateView(dateString) + ' ago:'))
 
 function accountHtml (account) {
-  const {
-    avatar,
-    username,
-    url,
-    display_name: displayName,
-    followers_count: followersCount
-  } = account
+  const { avatar, username, url, display_name: displayName } = account
   const accountServer = url.match(/https:\/\/([^/]+)\//)[1]
-  const avatarSize = Math.sqrt(followersCount)
 
-  return (
-    img({ src: avatar, width: avatarSize, height: avatarSize }) +
-    span(
-      ' @' +
-        username +
-        img({ src: `https://${accountServer}/favicon.ico` }, ['favicon'])
-    ) +
-    displayName
+  return h2(
+    ' @' +
+      username +
+      ' ' +
+      img({ src: avatar }) +
+      img({ src: `https://${accountServer}/favicon.ico` }) +
+      ' ' +
+      displayName
   )
 }
 
@@ -95,11 +89,9 @@ function statusHtml (status) {
     attachments && attachments.length > 0
       ? section(attachementListHtml(attachments))
       : ''
-  const contentSection = section(p(dateHtml(createdAt)), p(content))
+  const contentSection = section(dateHtml(createdAt), blockquote(content))
   const accountSection =
-    inReplyToAccountId === account.id
-      ? ''
-      : section(['metadata'], accountHtml(account))
+    inReplyToAccountId === account.id ? '' : section(accountHtml(account))
   return accountSection + contentSection + mediaSection
 }
 

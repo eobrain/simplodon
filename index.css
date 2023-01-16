@@ -1,15 +1,14 @@
 .hidden {
     display: none;
 }
-.favicon {
-    height: 1em;
+
+
+h2 img {
+    height: 1em;  
 }
-.metadata {
+
+/*.metadata {
     display: flex;
     align-items: center;
     justify-content: space-evenly
-}
-
-.metadata *{
-    
-}
+}*/

@@ -3,11 +3,10 @@ import {
   figure,
   figcaption,
   img,
-  li,
+  p,
   section,
   span,
   time,
-  ul,
   video,
 } from "https://unpkg.com/ez-html-elements";
 
@@ -76,16 +75,23 @@ function attachementHtml(attachement) {
 const attachementListHtml = (as) => as.map(attachementHtml).join("");
 
 function statusHtml(status) {
-  const { created_at, content, account, media_attachments } = status;
+  const {
+    created_at,
+    content,
+    account,
+    media_attachments,
+    in_reply_to_account_id,
+  } = status;
   const mediaSection =
     media_attachments && media_attachments.length > 0
       ? section(attachementListHtml(media_attachments))
       : "";
-  return (
-    section(["metadata"], accountHtml(account) + " " + dateHtml(created_at)) +
-    section(content) +
-    mediaSection
-  );
+  const contentSection = section(p(dateHtml(created_at)), p(content));
+  const accountSection =
+    in_reply_to_account_id === account.id
+      ? ""
+      : section(["metadata"], accountHtml(account));
+  return accountSection + contentSection + mediaSection;
 }
 
 /** Recursive */

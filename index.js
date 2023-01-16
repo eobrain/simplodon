@@ -114,7 +114,7 @@ async function statusChain (status) {
       `https://${server}/api/v1/statuses/${inReplyToId}`
     )
     const inReplyTo = await response.json()
-    return (await statusChain(inReplyTo)) + '🧵' + statusHtml(status)
+    return (await statusChain(inReplyTo)) + statusHtml(status)
   } catch {
     return statusHtml(status)
   }

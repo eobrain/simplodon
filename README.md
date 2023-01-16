@@ -1,5 +1,7 @@
 # Simpledon -- Simple Mastodon Web Client
 
+Code is running [here][1] (Enter a Mastodon server name to start.)
+
 Creating a Mastodon client with the simplest possible amount of code.
 
 1. Just three files (HTML, CSS, and JavaScript)
@@ -16,3 +18,4 @@ http://www.eclipse.org/legal/epl-v10.html
 
 > This is a purely personal project, not a project of my employer.
 
+[1]: https://allmastodon.com/simplodon

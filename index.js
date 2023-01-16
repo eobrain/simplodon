@@ -15,9 +15,47 @@ import {
 
 /* global timelineElement noServerElement headerElement serverElement */
 
-const SERVER_KEY = 'server'
-let server = window.localStorage.getItem(SERVER_KEY)
 const DAY_MS = 24 * 60 * 60 * 1000
+
+const server = (() => {
+  const KEY = 'server'
+  let hostname = window.localStorage.getItem(KEY)
+  updateDom()
+
+  const hasHostname = () => !!hostname
+
+  function setHostname (name) {
+    hostname = name
+    window.localStorage.setItem(KEY, hostname)
+    updateDom()
+  }
+
+  function removeHostname () {
+    hostname = null
+    window.localStorage.removeItem(KEY)
+    updateDom()
+  }
+
+  function updateDom () {
+    headerElement.innerHTML = hostname || '(no hostname)'
+  }
+
+  const timeline = async (querySuffix) =>
+    await (
+      await fetch(`https://${hostname}/api/v1/timelines/${querySuffix}`)
+    ).json()
+
+  const status = async (id) =>
+    await (await fetch(`https://${hostname}/api/v1/statuses/${id}`)).json()
+
+  return Object.freeze({
+    hasHostname,
+    setHostname,
+    removeHostname,
+    timeline,
+    status
+  })
+})()
 
 function dateView (dateString) {
   const dateMs = Date.parse(dateString)
@@ -33,15 +71,15 @@ const dateHtml = (dateString) =>
 
 function makeAccount (account) {
   function html () {
-    const server = account.url.match(/https:\/\/([^/]+)\//)[1]
+    const accountServer = account.url.match(/https:\/\/([^/]+)\//)[1]
 
     return p(
       img({ src: account.avatar, alt: `avatar of ${account.username}` }) +
         img({
-          src: `https://${server}/favicon.ico`,
-          alt: `avatar of ${server}`
+          src: `https://${accountServer}/favicon.ico`,
+          alt: `avatar of ${accountServer}`
         }) +
-        strong(' @' + account.username + '@' + server) +
+        strong(' @' + account.username + '@' + accountServer) +
         ' ' +
         em(account.display_name)
     )
@@ -100,11 +138,8 @@ function makeStatus (status) {
       return html()
     }
     try {
-      const response = await fetch(
-        `https://${server}/api/v1/statuses/${status.in_reply_to_id}`
-      )
-      const inReplyTo = await response.json()
-      return (await chain(inReplyTo)) + html()
+      const inReplyTo = makeStatus(await server.status(status.in_reply_to_id))
+      return (await inReplyTo.chain()) + html()
     } catch {
       return html()
     }
@@ -113,10 +148,7 @@ function makeStatus (status) {
 }
 
 async function showTimeline (querySuffix) {
-  const response = await fetch(
-    `https://${server}/api/v1/timelines/${querySuffix}`
-  )
-  const statuses = await response.json()
+  const statuses = await server.timeline(querySuffix)
   timelineElement.replaceChildren()
   for (const statusJson of statuses) {
     const status = makeStatus(statusJson)
@@ -129,12 +161,15 @@ async function showTimeline (querySuffix) {
 
 async function hasServer () {
   noServerElement.classList.add('hidden')
-  headerElement.innerHTML = server
-  if (!document.location.hash) {
+  if (!document.location.hash || document.location.hash === '#') {
     document.location.hash = '#public'
   } else {
     app()
   }
+}
+
+async function noServer () {
+  noServerElement.classList.remove('hidden')
 }
 
 async function app () {
@@ -145,22 +180,28 @@ async function app () {
     case '#public/local':
       await showTimeline('public?limit=40&local=true')
       break
+    case '#changeserver':
+      server.removeHostname()
+      noServer()
+      document.location.hash = ''
+      break
   }
 }
 
 window.onhashchange = app
 
-if (server) {
+if (server.hasHostname()) {
   hasServer()
 } else {
-  noServerElement.classList.remove('hidden')
-  serverElement.addEventListener('keyup', async (event) => {
-    if (event.key === 'Enter') {
-      server = serverElement.value.trim()
-      if (server && server.match(/[a-z]+\.[a-z]+/)) {
-        window.localStorage.setItem(SERVER_KEY, server)
-        await hasServer()
-      }
-    }
-  })
+  noServer()
 }
+
+serverElement.addEventListener('keyup', async (event) => {
+  if (event.key === 'Enter') {
+    const hostname = serverElement.value.trim()
+    if (hostname && hostname.match(/[a-z]+\.[a-z]+/)) {
+      server.setHostname(hostname)
+      await hasServer()
+    }
+  }
+})

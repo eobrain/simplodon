@@ -152,11 +152,16 @@ function makeStatus (status) {
     return accountSection + maybeHidden
   }
 
+  /* function thread() {
+
+  } */
+
   /** Recursive */
   async function chain () {
     if (!status.in_reply_to_id) {
       return _html()
     }
+    // return accordion('🧵', _thread())+_html()
     try {
       const inReplyTo = makeStatus(await server.status(status.in_reply_to_id))
       return (await inReplyTo.chain()) + _html()

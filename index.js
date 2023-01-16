@@ -97,6 +97,7 @@ function makeAccount (account) {
   return Object.freeze({ html, sameId })
 }
 
+/** Create an attachement object from the JSON returned from the server. */
 function makeAttachement (attachment) {
   function html () {
     if (!attachment.meta.small) {

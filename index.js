@@ -17,26 +17,27 @@ import {
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
+/** Singleton object encapsulating interactions with the Mastodon server. */
 const server = (() => {
   const KEY = 'server'
   let hostname = window.localStorage.getItem(KEY)
-  updateDom()
+  _updateDom()
 
   const hasHostname = () => !!hostname
 
   function setHostname (name) {
     hostname = name
     window.localStorage.setItem(KEY, hostname)
-    updateDom()
+    _updateDom()
   }
 
   function removeHostname () {
     hostname = null
     window.localStorage.removeItem(KEY)
-    updateDom()
+    _updateDom()
   }
 
-  function updateDom () {
+  function _updateDom () {
     headerElement.innerHTML = hostname || '(no hostname)'
   }
 
@@ -69,6 +70,7 @@ function dateView (dateString) {
 const dateHtml = (dateString) =>
   p(time({ datetime: dateString }, dateView(dateString)))
 
+/** Create an account object from the JSON returned from the server. */
 function makeAccount (account) {
   function html () {
     const accountServer = account.url.match(/https:\/\/([^/]+)\//)[1]
@@ -112,8 +114,9 @@ function attachementHtml (attachement) {
 
 const attachementListHtml = (as) => as.map(attachementHtml).join('')
 
+/** Creates a Status object from the JSON returned from the server. */
 function makeStatus (status) {
-  function html () {
+  function _html () {
     const mediaSection =
       status.media_attachments && status.media_attachments.length > 0
         ? section(attachementListHtml(status.media_attachments))
@@ -135,13 +138,13 @@ function makeStatus (status) {
   /** Recursive */
   async function chain () {
     if (!status.in_reply_to_id) {
-      return html()
+      return _html()
     }
     try {
       const inReplyTo = makeStatus(await server.status(status.in_reply_to_id))
-      return (await inReplyTo.chain()) + html()
+      return (await inReplyTo.chain()) + _html()
     } catch {
-      return html()
+      return _html()
     }
   }
   return Object.freeze({ chain })

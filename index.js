@@ -132,6 +132,8 @@ const attachmentListHtml = (as) =>
 
 /** Creates a Status object from the JSON returned from the server. */
 function makeStatus (status) {
+  const account = makeAccount(status.account)
+
   function _html () {
     const mediaSection =
       status.media_attachments && status.media_attachments.length > 0
@@ -139,18 +141,16 @@ function makeStatus (status) {
         : ''
     const createdAt = makeDate(status.created_at)
     const contentSection = section(status.content, p(em(createdAt.html())))
-    const account = makeAccount(status.account)
-    const accountSection = account.sameId(status.in_reply_to_account_id)
-      ? ''
-      : section(account.html())
-    const maybeHidden = status.spoiler_text
+    return status.spoiler_text
       ? details(summary(status.spoiler_text), contentSection + mediaSection)
       : contentSection + mediaSection
-    return accountSection + maybeHidden
   }
 
   async function addPrevious (detailsElement) {
     detailsElement.insertAdjacentHTML('afterbegin', _html())
+    if (!account.sameId(status.in_reply_to_account_id)) {
+      detailsElement.insertAdjacentHTML('afterbegin', section(account.html()))
+    }
     if (status.in_reply_to_id) {
       _addPrevious(detailsElement, status.in_reply_to_id) // no await, so happens asynchronously
     }
@@ -162,7 +162,10 @@ function makeStatus (status) {
   }
 
   async function thread (articleElement) {
-    articleElement.insertAdjacentHTML('beforeend', _html())
+    articleElement.insertAdjacentHTML(
+      'beforeend',
+      section(account.html()) + _html()
+    )
     if (status.in_reply_to_id) {
       const detailsElement = document.createElement('details')
       const summaryElement = document.createElement('summary')

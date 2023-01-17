@@ -146,19 +146,19 @@ function makeStatus (status) {
       : contentSection + mediaSection
   }
 
-  function addPrevious (detailsElement) {
-    detailsElement.insertAdjacentHTML('afterbegin', _html())
+  function addPrevious (summaryElement) {
+    summaryElement.insertAdjacentHTML('afterend', _html())
     if (!account.sameId(status.in_reply_to_account_id)) {
-      detailsElement.insertAdjacentHTML('afterbegin', section(account.html()))
+      summaryElement.insertAdjacentHTML('afterend', section(account.html()))
     }
     if (status.in_reply_to_id) {
-      _addPrevious(detailsElement, status.in_reply_to_id) // no await, so happens asynchronously
+      _addPrevious(summaryElement, status.in_reply_to_id) // no await, so happens asynchronously
     }
   }
 
-  async function _addPrevious (detailsElement) {
+  async function _addPrevious (summaryElement) {
     const inReplyTo = makeStatus(await server.status(status.in_reply_to_id))
-    inReplyTo.addPrevious(detailsElement)
+    inReplyTo.addPrevious(summaryElement)
   }
 
   async function thread (articleElement) {
@@ -172,7 +172,7 @@ function makeStatus (status) {
       summaryElement.innerText = '🧵'
       detailsElement.append(summaryElement)
       articleElement.insertAdjacentElement('afterbegin', detailsElement)
-      _addPrevious(detailsElement, status.in_reply_to_id) // no await, so happens asynchronously
+      _addPrevious(summaryElement, status.in_reply_to_id) // no await, so happens asynchronously
     }
   }
   return Object.freeze({ thread, addPrevious })

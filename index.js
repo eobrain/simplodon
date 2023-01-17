@@ -1,5 +1,4 @@
 import {
-  article,
   details,
   em,
   figure,
@@ -131,8 +130,6 @@ function makeAttachement (attachment) {
 const attachmentListHtml = (as) =>
   as.map((a) => makeAttachement(a).html()).join('')
 
-const accordion = (head, body) => details(summary(head), body)
-
 /** Creates a Status object from the JSON returned from the server. */
 function makeStatus (status) {
   function _html () {
@@ -147,33 +144,35 @@ function makeStatus (status) {
       ? ''
       : section(account.html())
     const maybeHidden = status.spoiler_text
-      ? accordion(status.spoiler_text, contentSection + mediaSection)
+      ? details(summary(status.spoiler_text), contentSection + mediaSection)
       : contentSection + mediaSection
     return accountSection + maybeHidden
   }
 
-  /* function thread() {
-
-  } */
-
-  /** Recursive */
-  async function chain () {
-    if (!status.in_reply_to_id) {
-      return _html()
-    }
-    // return accordion('🧵', _thread())+_html()
-    try {
-      const inReplyTo = makeStatus(await server.status(status.in_reply_to_id))
-      return (await inReplyTo.chain()) + _html()
-    } catch {
-      return _html()
+  async function addPrevious (detailsElement) {
+    detailsElement.insertAdjacentHTML('afterbegin', _html())
+    if (status.in_reply_to_id) {
+      _addPrevious(detailsElement, status.in_reply_to_id) // no await, so happens asynchronously
     }
   }
 
-  async function insertAdjacent (parent, position) {
-    parent.insertAdjacentHTML(position, article(await chain()))
+  async function _addPrevious (detailsElement) {
+    const inReplyTo = makeStatus(await server.status(status.in_reply_to_id))
+    await inReplyTo.addPrevious(detailsElement)
   }
-  return Object.freeze({ chain, insertAdjacent })
+
+  async function thread (articleElement) {
+    articleElement.insertAdjacentHTML('beforeend', _html())
+    if (status.in_reply_to_id) {
+      const detailsElement = document.createElement('details')
+      const summaryElement = document.createElement('summary')
+      summaryElement.innerText = '🧵'
+      detailsElement.append(summaryElement)
+      articleElement.insertAdjacentElement('afterbegin', detailsElement)
+      _addPrevious(detailsElement, status.in_reply_to_id) // no await, so happens asynchronously
+    }
+  }
+  return Object.freeze({ thread, addPrevious })
 }
 
 async function showTimeline (querySuffix) {
@@ -181,7 +180,9 @@ async function showTimeline (querySuffix) {
   timelineElement.replaceChildren()
   for (const statusJson of statuses) {
     const status = makeStatus(statusJson)
-    await status.insertAdjacent(timelineElement, 'beforeend')
+    const articleElement = document.createElement('article')
+    timelineElement.append(articleElement)
+    await status.thread(articleElement)
   }
 }
 

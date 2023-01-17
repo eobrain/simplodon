@@ -146,7 +146,7 @@ function makeStatus (status) {
       : contentSection + mediaSection
   }
 
-  async function addPrevious (detailsElement) {
+  function addPrevious (detailsElement) {
     detailsElement.insertAdjacentHTML('afterbegin', _html())
     if (!account.sameId(status.in_reply_to_account_id)) {
       detailsElement.insertAdjacentHTML('afterbegin', section(account.html()))
@@ -158,7 +158,7 @@ function makeStatus (status) {
 
   async function _addPrevious (detailsElement) {
     const inReplyTo = makeStatus(await server.status(status.in_reply_to_id))
-    await inReplyTo.addPrevious(detailsElement)
+    inReplyTo.addPrevious(detailsElement)
   }
 
   async function thread (articleElement) {

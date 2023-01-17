@@ -1,14 +1,7 @@
 .hidden {
-    display: none;
+  display: none;
 }
-
 
 p > img {
-    height: 2em;  
+  height: 2em;
 }
-
-/*.metadata {
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly
-}*/

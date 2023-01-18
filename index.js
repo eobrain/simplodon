@@ -96,8 +96,8 @@ function makeAccount (account) {
   return Object.freeze({ html, sameId })
 }
 
-/** Create an attachement object from the JSON returned from the server. */
-function makeAttachement (attachment, isSensitive) {
+/** Create an attachment object from the JSON returned from the server. */
+function makeAttachment (attachment, isSensitive) {
   function _media () {
     if (!attachment.meta.small) {
       return ''
@@ -142,7 +142,7 @@ function makeAttachement (attachment, isSensitive) {
 }
 
 const attachmentListHtml = (as, isSensitive) =>
-  as.map((a) => makeAttachement(a, isSensitive).html()).join('')
+  as.map((a) => makeAttachment(a, isSensitive).html()).join('')
 
 /** Creates a Status object from the JSON returned from the server. */
 function makeStatus (status) {

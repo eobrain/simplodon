@@ -97,8 +97,8 @@ function makeAccount (account) {
 }
 
 /** Create an attachement object from the JSON returned from the server. */
-function makeAttachement (attachment) {
-  function html () {
+function makeAttachement (attachment, isSensitive) {
+  function _media () {
     if (!attachment.meta.small) {
       return ''
     }
@@ -122,13 +122,27 @@ function makeAttachement (attachment) {
             height
           }) + figcaption(attachment.description)
         )
+      default:
+        return ''
     }
   }
+  function html () {
+    const media = _media()
+    if (media === '') {
+      return ''
+    }
+    const fig = figure(media + figcaption(attachment.description))
+    if (!isSensitive) {
+      return fig
+    }
+    return details(summary('⚠️🫣 ' + attachment.description), fig)
+  }
+
   return Object.freeze({ html })
 }
 
-const attachmentListHtml = (as) =>
-  as.map((a) => makeAttachement(a).html()).join('')
+const attachmentListHtml = (as, isSensitive) =>
+  as.map((a) => makeAttachement(a, isSensitive).html()).join('')
 
 /** Creates a Status object from the JSON returned from the server. */
 function makeStatus (status) {
@@ -137,7 +151,9 @@ function makeStatus (status) {
   function _html () {
     const mediaSection =
       status.media_attachments && status.media_attachments.length > 0
-        ? section(attachmentListHtml(status.media_attachments))
+        ? section(
+          attachmentListHtml(status.media_attachments, status.sensitive)
+        )
         : ''
     const createdAt = makeDate(status.created_at)
     const contentSection = section(status.content, p(em(createdAt.html())))

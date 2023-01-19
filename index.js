@@ -254,6 +254,14 @@ async function app () {
       noServer()
       document.location.hash = ''
       break
+    default: {
+      const hashtagMatch = document.location.hash.match(/#tags\/(.+)$/)
+      if (hashtagMatch) {
+        const hashtag = hashtagMatch[1]
+        await showTimeline(`tag/${hashtag}?limit=40`)
+        break
+      }
+    }
   }
 }
 

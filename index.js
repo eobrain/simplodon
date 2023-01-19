@@ -1,4 +1,6 @@
 import {
+  a,
+  aside,
   details,
   em,
   figure,
@@ -96,6 +98,29 @@ function makeAccount (account) {
   return Object.freeze({ html, sameId })
 }
 
+/** Create a card object from the JSON returned from the server. */
+function makeCard (card) {
+  const caption =
+    a({ href: card.url }, card.title) +
+    (card.description ? p(card.description) : '')
+  function html () {
+    switch (card.type) {
+      case 'link':
+      case 'video':
+        return aside(
+          a(
+            { href: card.url, alt: card.title },
+            img({ width: card.width, height: card.height, src: card.image }),
+            caption
+          )
+        )
+      default:
+        return ''
+    }
+  }
+  return Object.freeze({ html })
+}
+
 /** Create an attachment object from the JSON returned from the server. */
 function makeAttachment (attachment, isSensitive) {
   function _media () {
@@ -155,8 +180,13 @@ function makeStatus (status) {
           attachmentListHtml(status.media_attachments, status.sensitive)
         )
         : ''
+    const cardHtml = status.card ? makeCard(status.card).html() : ''
     const createdAt = makeDate(status.created_at)
-    const contentSection = section(status.content, p(em(createdAt.html())))
+    const contentSection = section(
+      cardHtml,
+      status.content,
+      p(em(createdAt.html()))
+    )
     return status.spoiler_text
       ? details(summary(status.spoiler_text), contentSection + mediaSection)
       : contentSection + mediaSection

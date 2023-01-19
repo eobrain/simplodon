@@ -1,7 +1,15 @@
-.hidden {
+.hidden, .invisible {
   display: none;
 }
 
 p > img {
   height: 2em;
+}
+
+.ellipsis::after {
+    content: "…";
+}
+
+article {
+    clear: right;
 }

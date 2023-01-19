@@ -2,6 +2,7 @@ import {
   a,
   aside,
   details,
+  div,
   em,
   figure,
   figcaption,
@@ -182,11 +183,18 @@ function makeStatus (status) {
     )
     return status.spoiler_text
       ? details(summary(status.spoiler_text), contentSection + mediaSection)
-      : contentSection + mediaSection
+      : div(contentSection + mediaSection)
+  }
+
+  function filterStatus (statusElement) {
+    statusElement.querySelectorAll('a.hashtag').forEach((a) => {
+      a.href = a.href.replace(/^.*\/tags\/(.+)$/, '#tags/$1')
+    })
   }
 
   function addPrevious (summaryElement) {
     summaryElement.insertAdjacentHTML('afterend', _html())
+    filterStatus(summaryElement.nextElementSibling)
     if (!account.sameId(status.in_reply_to_account_id)) {
       summaryElement.insertAdjacentHTML('afterend', section(account.html()))
     }
@@ -205,6 +213,7 @@ function makeStatus (status) {
       'beforeend',
       section(account.html()) + _html()
     )
+    filterStatus(articleElement.lastElementChild)
     if (status.in_reply_to_id) {
       const detailsElement = document.createElement('details')
       const summaryElement = document.createElement('summary')

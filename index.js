@@ -10,8 +10,7 @@ import {
   section,
   summary,
   strong,
-  time,
-  video
+  time
 } from 'https://unpkg.com/ez-html-elements'
 
 /* global timelineElement noServerElement headerElement serverElement */
@@ -130,22 +129,17 @@ function makeAttachment (attachment, isSensitive) {
     const { width, height } = attachment.meta.small
     switch (attachment.type) {
       case 'image':
-        return figure(
-          img({
-            alt: attachment.description,
-            src: attachment.preview_url,
-            width,
-            height
-          }) + figcaption(attachment.description)
-        )
       case 'video':
         return figure(
-          video({
-            controls: true,
-            src: attachment.preview_url,
-            width,
-            height
-          }) + figcaption(attachment.description)
+          a(
+            { href: attachment.url },
+            img({
+              alt: attachment.description,
+              src: attachment.preview_url,
+              width,
+              height
+            })
+          ) + figcaption(attachment.description)
         )
       default:
         return ''
@@ -156,11 +150,10 @@ function makeAttachment (attachment, isSensitive) {
     if (media === '') {
       return ''
     }
-    const fig = figure(media + figcaption(attachment.description))
     if (!isSensitive) {
-      return fig
+      return media
     }
-    return details(summary('⚠️🫣 ' + attachment.description), fig)
+    return details(summary('⚠️🫣 ' + attachment.description), media)
   }
 
   return Object.freeze({ html })

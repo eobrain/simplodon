@@ -14,46 +14,95 @@ import {
   time
 } from 'https://unpkg.com/ez-html-elements'
 
-/* global timelineElement noServerElement headerElement serverElement */
+/* global alert, timelineElement loginElement homeElement, noServerElement headerElement serverElement */
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
 /** Singleton object encapsulating interactions with the Mastodon server. */
 const server = (() => {
-  const KEY = 'server'
-  let hostname = window.localStorage.getItem(KEY)
-  _updateDom()
+  const SERVER_KEY = 'server'
+  const BEARER_KEY = 'bearer'
+
+  let hostname = window.localStorage.getItem(SERVER_KEY)
+  let bearer = window.localStorage.getItem(BEARER_KEY)
+  const headers = {}
+
+  _update()
 
   const hasHostname = () => !!hostname
+  const isLoggedIn = () => !!bearer
 
   function setHostname (name) {
     hostname = name
-    window.localStorage.setItem(KEY, hostname)
-    _updateDom()
+    window.localStorage.setItem(SERVER_KEY, hostname)
+    _update()
+  }
+
+  function login (code) {
+    // TODO do POST /oauth/token HTTP/1.1 to get actual bearer code
+    bearer = code // NOT correct
+    window.localStorage.setItem(BEARER_KEY, bearer)
+    _update()
   }
 
   function removeHostname () {
     hostname = null
-    window.localStorage.removeItem(KEY)
-    _updateDom()
+    window.localStorage.removeItem(SERVER_KEY)
+    window.localStorage.removeItem(BEARER_KEY)
+    _update()
   }
 
-  function _updateDom () {
+  const CLIENT_ID = 'S1X3r40DyEN6qX8RjxkoL4uRm6arRqEcoYK2NVrHSf8'
+  // const REDIRECT_URI = 'urn:ietf:wg:oauth:2.0:oob'
+  const REDIRECT_URI = 'http://localhost:8000/'
+  // const REDIRECT_URI='https://allmastodon.com/simplodon/' // TODO make dynamic
+
+  function setAuthorizeHref (anchorElement) {
+    const paramsMap = {
+      client_id: CLIENT_ID,
+      force_login: false,
+      scope: 'read+write+follow',
+      redirect_uri: REDIRECT_URI,
+      origin: 'https://allmastodon.com/simplodon/',
+      response_type: 'code',
+      lang: 'en-US' // TODO use browser locale
+    }
+    const params = Object.keys(paramsMap)
+      .map((k) => `${k}=${paramsMap[k]}`)
+      .join('&')
+    anchorElement.href = `https://${hostname}/oauth/authorize?${params}`
+  }
+
+  function _update () {
     headerElement.innerHTML = hostname || '(no hostname)'
+    if (bearer) {
+      homeElement.classList.add('hidden')
+      headers.Authorization = `Bearer ${bearer}`
+    } else {
+      homeElement.classList.remove('hidden')
+      delete headers.Authorization
+    }
   }
 
   const timeline = async (querySuffix) =>
     await (
-      await fetch(`https://${hostname}/api/v1/timelines/${querySuffix}`)
+      await fetch(`https://${hostname}/api/v1/timelines/${querySuffix}`, {
+        headers
+      })
     ).json()
 
   const status = async (id) =>
-    await (await fetch(`https://${hostname}/api/v1/statuses/${id}`)).json()
+    await (
+      await fetch(`https://${hostname}/api/v1/statuses/${id}`, { headers })
+    ).json()
 
   return Object.freeze({
     hasHostname,
     setHostname,
+    isLoggedIn,
+    login,
     removeHostname,
+    setAuthorizeHref,
     timeline,
     status
   })
@@ -228,6 +277,10 @@ function makeStatus (status) {
 
 async function showTimeline (querySuffix) {
   const statuses = await server.timeline(querySuffix)
+  if (statuses.error) {
+    alert(statuses.error)
+    return
+  }
   timelineElement.replaceChildren()
   for (const statusJson of statuses) {
     const status = makeStatus(statusJson)
@@ -238,20 +291,33 @@ async function showTimeline (querySuffix) {
 }
 
 async function hasServer () {
+  server.setAuthorizeHref(loginElement)
+  loginElement.classList.remove('hidden')
   noServerElement.classList.add('hidden')
   if (!document.location.hash || document.location.hash === '#') {
-    document.location.hash = '#public'
+    document.location.hash = server.isLoggedIn ? '#home' : '#public'
   } else {
     app()
   }
 }
 
 async function noServer () {
+  loginElement.classList.add('hidden')
   noServerElement.classList.remove('hidden')
 }
 
 async function app () {
+  const codeMatch = document.location.search.match(/code=(.+)$/)
+  if (codeMatch) {
+    server.login(codeMatch[1])
+    document.location.search = ''
+    document.location.hash = '#home'
+    return
+  }
   switch (document.location.hash) {
+    case '#home':
+      await showTimeline('home?limit=40')
+      break
     case '#public':
       await showTimeline('public?limit=40')
       break

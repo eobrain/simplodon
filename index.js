@@ -21,16 +21,19 @@ const DAY_MS = 24 * 60 * 60 * 1000
 /** Singleton object encapsulating interactions with the Mastodon server. */
 const server = (() => {
   const SERVER_KEY = 'server'
-  const BEARER_KEY = 'bearer'
+  const ACCESS_TOKEN_KEY = 'access_token'
+  const TOKEN_TYPE_KEY = 'token_type'
 
   let hostname = window.localStorage.getItem(SERVER_KEY)
-  let bearer = window.localStorage.getItem(BEARER_KEY)
+  let access_token = window.localStorage.getItem(ACCESS_TOKEN_KEY)
+  let token_type = window.localStorage.getItem(TOKEN_TYPE_KEY)
+
   const headers = {}
 
   _update()
 
   const hasHostname = () => !!hostname
-  const isLoggedIn = () => !!bearer
+  const isLoggedIn = () => !!access_token
 
   function setHostname (name) {
     hostname = name
@@ -38,17 +41,19 @@ const server = (() => {
     _update()
   }
 
-  function login (code) {
-    // TODO do POST /oauth/token HTTP/1.1 to get actual bearer code
-    bearer = code // NOT correct
-    window.localStorage.setItem(BEARER_KEY, bearer)
+  async function login (code) {
+    ({ access_token, token_type } = await _token())
+    window.localStorage.setItem(ACCESS_TOKEN_KEY, access_token)
+    window.localStorage.setItem(TOKEN_TYPE_KEY, token_type)
+
     _update()
   }
 
   function removeHostname () {
     hostname = null
     window.localStorage.removeItem(SERVER_KEY)
-    window.localStorage.removeItem(BEARER_KEY)
+    window.localStorage.removeItem(ACCESS_TOKEN_KEY)
+    window.localStorage.removeItem(TOKEN_TYPE_KEY)
     _update()
   }
 
@@ -57,11 +62,13 @@ const server = (() => {
   const REDIRECT_URI = 'http://localhost:8000/'
   // const REDIRECT_URI='https://allmastodon.com/simplodon/' // TODO make dynamic
 
+  const SCOPE = 'read+write+follow'
+
   function setAuthorizeHref (anchorElement) {
     const paramsMap = {
       client_id: CLIENT_ID,
       force_login: false,
-      scope: 'read+write+follow',
+      scope: SCOPE,
       redirect_uri: REDIRECT_URI,
       origin: 'https://allmastodon.com/simplodon/',
       response_type: 'code',
@@ -75,9 +82,9 @@ const server = (() => {
 
   function _update () {
     headerElement.innerHTML = hostname || '(no hostname)'
-    if (bearer) {
+    if (access_token) {
       homeElement.classList.add('hidden')
-      headers.Authorization = `Bearer ${bearer}`
+      headers.Authorization = `${token_type} ${access_token}`
     } else {
       homeElement.classList.remove('hidden')
       delete headers.Authorization
@@ -94,6 +101,18 @@ const server = (() => {
   const status = async (id) =>
     await (
       await fetch(`https://${hostname}/api/v1/statuses/${id}`, { headers })
+    ).json()
+
+  const CLIENT_KEY = 'S1X3r40DyEN6qX8RjxkoL4uRm6arRqEcoYK2NVrHSf8'
+  const CLIENT_SECRET = '6nnyTmudEH6l0iL2nP7ONDoeUUFkgll0N7r7iC3EEzg'
+
+  const _token = async (code) =>
+    await (
+      await fetch(`https://${hostname}/oauth/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `grant_type=authorization_code&code=${code}&client_id=${CLIENT_KEY}&client_secret=${CLIENT_SECRET}&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=${SCOPE}`
+      })
     ).json()
 
   return Object.freeze({
@@ -309,7 +328,7 @@ async function noServer () {
 async function app () {
   const codeMatch = document.location.search.match(/code=(.+)$/)
   if (codeMatch) {
-    server.login(codeMatch[1])
+    await server.login(codeMatch[1])
     document.location.search = ''
     document.location.hash = '#home'
     return

@@ -26,19 +26,33 @@ const server = (() => {
   const TOKEN_TYPE_KEY = 'token_type'
   const headers = {}
   const origin = 'https://allmastodon.com/simplodon/'
-  const CLIENT_ID = 'S1X3r40DyEN6qX8RjxkoL4uRm6arRqEcoYK2NVrHSf8'
-  const REDIRECT_URI = document.location.origin + document.location.pathname
-
   const scope = 'read+write+follow'
-  const CLIENT_KEY = 'S1X3r40DyEN6qX8RjxkoL4uRm6arRqEcoYK2NVrHSf8'
-  const CLIENT_SECRET = '6nnyTmudEH6l0iL2nP7ONDoeUUFkgll0N7r7iC3EEzg'
+  /* eslint-disable camelcase -- because Mastodon API has camelcase JSON fields */
+  const client_id = 'S1X3r40DyEN6qX8RjxkoL4uRm6arRqEcoYK2NVrHSf8'
+  const client_secret = '6nnyTmudEH6l0iL2nP7ONDoeUUFkgll0N7r7iC3EEzg'
+  const redirect_uri = document.location.origin + document.location.pathname
+  /* eslint-enable */
+
+  const urlParams = (object) =>
+    Object.keys(object)
+      .map((k) => `${k}=${object[k]}`)
+      .join('&')
 
   const token = async (code) =>
     await (
       await fetch(`https://${hostname}/oauth/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `grant_type=authorization_code&code=${code}&client_id=${CLIENT_KEY}&client_secret=${CLIENT_SECRET}&redirect_uri=${REDIRECT_URI}&scope=${scope}`
+        body: urlParams({
+          grant_type: 'authorization_code',
+          code,
+          /* eslint-disable camelcase -- because Mastodon API has camelcase JSON fields */
+          client_id,
+          client_secret,
+          redirect_uri,
+          /* eslint-enable */
+          scope
+        })
       })
     ).json()
 
@@ -76,19 +90,17 @@ const server = (() => {
 
     /** Kick off the first step in the OAuth flow by sending the user to the server. */
     setAuthorizeHref: (anchorElement) => {
-      const paramsMap = {
-        client_id: CLIENT_ID,
+      anchorElement.href = `https://${hostname}/oauth/authorize?${urlParams({
         force_login: false,
         scope,
-        redirect_uri: REDIRECT_URI,
+        /* eslint-disable camelcase -- because Mastodon API has camelcase JSON fields */
+        client_id,
+        redirect_uri,
+        /* eslint-enable */
         origin,
         response_type: 'code',
-        lang: 'en-US' // TODO use browser locale
-      }
-      const params = Object.keys(paramsMap)
-        .map((k) => `${k}=${paramsMap[k]}`)
-        .join('&')
-      anchorElement.href = `https://${hostname}/oauth/authorize?${params}`
+        lang: navigator.language
+      })}`
     },
 
     /** Execute the second step of the OAuth flow after receiving the code from the server */

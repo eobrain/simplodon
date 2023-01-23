@@ -25,15 +25,15 @@ const server = (() => {
   const TOKEN_TYPE_KEY = 'token_type'
 
   let hostname = window.localStorage.getItem(SERVER_KEY)
-  let access_token = window.localStorage.getItem(ACCESS_TOKEN_KEY)
-  let token_type = window.localStorage.getItem(TOKEN_TYPE_KEY)
+  let accessToken = window.localStorage.getItem(ACCESS_TOKEN_KEY)
+  let tokenType = window.localStorage.getItem(TOKEN_TYPE_KEY)
 
   const headers = {}
 
   _update()
 
   const hasHostname = () => !!hostname
-  const isLoggedIn = () => !!access_token
+  const isLoggedIn = () => !!accessToken
 
   function setHostname (name) {
     hostname = name
@@ -42,9 +42,9 @@ const server = (() => {
   }
 
   async function login (code) {
-    ({ access_token, token_type } = await _token())
-    window.localStorage.setItem(ACCESS_TOKEN_KEY, access_token)
-    window.localStorage.setItem(TOKEN_TYPE_KEY, token_type)
+    ({ access_token: accessToken, token_type: tokenType } = await _token(code))
+    window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
+    window.localStorage.setItem(TOKEN_TYPE_KEY, tokenType)
 
     _update()
   }
@@ -82,9 +82,9 @@ const server = (() => {
 
   function _update () {
     headerElement.innerHTML = hostname || '(no hostname)'
-    if (access_token) {
+    if (accessToken) {
       homeElement.classList.add('hidden')
-      headers.Authorization = `${token_type} ${access_token}`
+      headers.Authorization = `${tokenType} ${accessToken}`
     } else {
       homeElement.classList.remove('hidden')
       delete headers.Authorization
@@ -111,7 +111,7 @@ const server = (() => {
       await fetch(`https://${hostname}/oauth/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `grant_type=authorization_code&code=${code}&client_id=${CLIENT_KEY}&client_secret=${CLIENT_SECRET}&redirect_uri=urn:ietf:wg:oauth:2.0:oob&scope=${SCOPE}`
+        body: `grant_type=authorization_code&code=${code}&client_id=${CLIENT_KEY}&client_secret=${CLIENT_SECRET}&redirect_uri=${REDIRECT_URI}&scope=${SCOPE}`
       })
     ).json()
 

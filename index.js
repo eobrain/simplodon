@@ -20,67 +20,31 @@ const DAY_MS = 24 * 60 * 60 * 1000
 
 /** Singleton object encapsulating interactions with the Mastodon server. */
 const server = (() => {
+  // server PRIVATE:
   const SERVER_KEY = 'server'
   const ACCESS_TOKEN_KEY = 'access_token'
   const TOKEN_TYPE_KEY = 'token_type'
-
-  let hostname = window.localStorage.getItem(SERVER_KEY)
-  let accessToken = window.localStorage.getItem(ACCESS_TOKEN_KEY)
-  let tokenType = window.localStorage.getItem(TOKEN_TYPE_KEY)
-
   const headers = {}
-
-  _update()
-
-  const hasHostname = () => !!hostname
-  const isLoggedIn = () => !!accessToken
-
-  function setHostname (name) {
-    hostname = name
-    window.localStorage.setItem(SERVER_KEY, hostname)
-    _update()
-  }
-
-  async function login (code) {
-    ({ access_token: accessToken, token_type: tokenType } = await _token(code))
-    window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
-    window.localStorage.setItem(TOKEN_TYPE_KEY, tokenType)
-
-    _update()
-  }
-
-  function removeHostname () {
-    hostname = null
-    window.localStorage.removeItem(SERVER_KEY)
-    window.localStorage.removeItem(ACCESS_TOKEN_KEY)
-    window.localStorage.removeItem(TOKEN_TYPE_KEY)
-    _update()
-  }
-
+  const origin = 'https://allmastodon.com/simplodon/'
   const CLIENT_ID = 'S1X3r40DyEN6qX8RjxkoL4uRm6arRqEcoYK2NVrHSf8'
   // const REDIRECT_URI = 'urn:ietf:wg:oauth:2.0:oob'
   const REDIRECT_URI = 'http://localhost:8000/'
   // const REDIRECT_URI='https://allmastodon.com/simplodon/' // TODO make dynamic
 
-  const SCOPE = 'read+write+follow'
+  const scope = 'read+write+follow'
+  const CLIENT_KEY = 'S1X3r40DyEN6qX8RjxkoL4uRm6arRqEcoYK2NVrHSf8'
+  const CLIENT_SECRET = '6nnyTmudEH6l0iL2nP7ONDoeUUFkgll0N7r7iC3EEzg'
 
-  function setAuthorizeHref (anchorElement) {
-    const paramsMap = {
-      client_id: CLIENT_ID,
-      force_login: false,
-      scope: SCOPE,
-      redirect_uri: REDIRECT_URI,
-      origin: 'https://allmastodon.com/simplodon/',
-      response_type: 'code',
-      lang: 'en-US' // TODO use browser locale
-    }
-    const params = Object.keys(paramsMap)
-      .map((k) => `${k}=${paramsMap[k]}`)
-      .join('&')
-    anchorElement.href = `https://${hostname}/oauth/authorize?${params}`
-  }
+  const token = async (code) =>
+    await (
+      await fetch(`https://${hostname}/oauth/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `grant_type=authorization_code&code=${code}&client_id=${CLIENT_KEY}&client_secret=${CLIENT_SECRET}&redirect_uri=${REDIRECT_URI}&scope=${scope}`
+      })
+    ).json()
 
-  function _update () {
+  function update () {
     headerElement.innerHTML = hostname || '(no hostname)'
     if (accessToken) {
       homeElement.classList.add('hidden')
@@ -91,45 +55,85 @@ const server = (() => {
     }
   }
 
-  const timeline = async (querySuffix) =>
-    await (
-      await fetch(`https://${hostname}/api/v1/timelines/${querySuffix}`, {
-        headers
-      })
-    ).json()
+  // server CONSTRUCTOR:
+  let hostname = window.localStorage.getItem(SERVER_KEY)
+  let accessToken = window.localStorage.getItem(ACCESS_TOKEN_KEY)
+  let tokenType = window.localStorage.getItem(TOKEN_TYPE_KEY)
+  update()
 
-  const status = async (id) =>
-    await (
-      await fetch(`https://${hostname}/api/v1/statuses/${id}`, { headers })
-    ).json()
-
-  const CLIENT_KEY = 'S1X3r40DyEN6qX8RjxkoL4uRm6arRqEcoYK2NVrHSf8'
-  const CLIENT_SECRET = '6nnyTmudEH6l0iL2nP7ONDoeUUFkgll0N7r7iC3EEzg'
-
-  const _token = async (code) =>
-    await (
-      await fetch(`https://${hostname}/oauth/token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `grant_type=authorization_code&code=${code}&client_id=${CLIENT_KEY}&client_secret=${CLIENT_SECRET}&redirect_uri=${REDIRECT_URI}&scope=${SCOPE}`
-      })
-    ).json()
-
+  // server PUBLIC:
   return Object.freeze({
-    hasHostname,
-    setHostname,
-    isLoggedIn,
-    login,
-    removeHostname,
-    setAuthorizeHref,
-    timeline,
-    status
+    /** Has a hostname been defined (from user or from localStorage)? */
+    hasHostname: () => !!hostname,
+
+    /** Set hostname as entered by user, and store in localStorage */
+    setHostname: (name) => {
+      hostname = name
+      window.localStorage.setItem(SERVER_KEY, hostname)
+      update()
+    },
+
+    /** Have we gone through the OAuth flow? */
+    isLoggedIn: () => !!accessToken,
+
+    /** Kick off the first step in the OAuth flow by sending the user to the server. */
+    setAuthorizeHref: (anchorElement) => {
+      const paramsMap = {
+        client_id: CLIENT_ID,
+        force_login: false,
+        scope,
+        redirect_uri: REDIRECT_URI,
+        origin,
+        response_type: 'code',
+        lang: 'en-US' // TODO use browser locale
+      }
+      const params = Object.keys(paramsMap)
+        .map((k) => `${k}=${paramsMap[k]}`)
+        .join('&')
+      anchorElement.href = `https://${hostname}/oauth/authorize?${params}`
+    },
+
+    /** Execute the second step of the OAuth flow after receiving the code from the server */
+    login: async (code) => {
+      ({ access_token: accessToken, token_type: tokenType } = await token(
+        code
+      ))
+      window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
+      window.localStorage.setItem(TOKEN_TYPE_KEY, tokenType)
+
+      update()
+    },
+
+    /** Logout and disconnect from the server (deleting everything from localstorage) */
+    removeHostname: () => {
+      hostname = null
+      accessToken = null
+      window.localStorage.removeItem(SERVER_KEY)
+      window.localStorage.removeItem(ACCESS_TOKEN_KEY)
+      window.localStorage.removeItem(TOKEN_TYPE_KEY)
+      update()
+    },
+
+    /** Fetch data for a list of posts. */
+    timeline: async (querySuffix) =>
+      await (
+        await fetch(`https://${hostname}/api/v1/timelines/${querySuffix}`, {
+          headers
+        })
+      ).json(),
+
+    /** Fetch data for one post. */
+    status: async (id) =>
+      await (
+        await fetch(`https://${hostname}/api/v1/statuses/${id}`, { headers })
+      ).json()
   })
 })()
 
 /** Create a date object from a standard string representation */
-function makeDate (dateString) {
-  function _localeString (dateString) {
+function HtmlDate (dateString) {
+  // HtmlDate PRIVATE:
+  function localeString (dateString) {
     const dateMs = Date.parse(dateString)
     const date = new Date()
     date.setTime(dateMs)
@@ -138,60 +142,71 @@ function makeDate (dateString) {
       : date.toLocaleDateString()
   }
 
-  const html = () =>
-    p(time({ datetime: dateString }, _localeString(dateString)))
-
-  return Object.freeze({ html })
+  // HtmlDate PUBLIC:
+  return Object.freeze({
+    /** Generate HTML text */
+    html: () => p(time({ datetime: dateString }, localeString(dateString)))
+  })
 }
 
 /** Create an account object from the JSON returned from the server. */
-function makeAccount (account) {
-  function html () {
-    const accountServer = account.url.match(/https:\/\/([^/]+)\//)[1]
+function Account (account) {
+  // Account PUBLIC:
+  return Object.freeze({
+    /** Is the given id the same as this account's id? */
+    sameId: (id) => id === account.id,
 
-    return p(
-      img({ src: account.avatar, alt: `avatar of ${account.username}` }) +
-        img({
-          src: `https://${accountServer}/favicon.ico`,
-          alt: `avatar of ${accountServer}`
-        }) +
-        strong(' @' + account.username + '@' + accountServer) +
-        ' ' +
-        em(account.display_name)
-    )
-  }
+    /** Generate HTML text */
+    html: () => {
+      const accountServer = account.url.match(/https:\/\/([^/]+)\//)[1]
 
-  const sameId = (id) => id === account.id
-
-  return Object.freeze({ html, sameId })
+      return p(
+        img({ src: account.avatar, alt: `avatar of ${account.username}` }) +
+          img({
+            src: `https://${accountServer}/favicon.ico`,
+            alt: `avatar of ${accountServer}`
+          }) +
+          strong(' @' + account.username + '@' + accountServer) +
+          ' ' +
+          em(account.display_name)
+      )
+    }
+  })
 }
 
 /** Create a card object from the JSON returned from the server. */
-function makeCard (card) {
+function Card (card) {
+  // Card PRIVATE:
   const caption =
     a({ href: card.url }, card.title) +
     (card.description ? p(card.description) : '')
-  function html () {
-    switch (card.type) {
-      case 'link':
-      case 'video':
-        return aside(
-          a(
-            { href: card.url, alt: card.title },
-            img({ width: card.width, height: card.height, src: card.image }),
-            caption
+
+  // Card PUBLIC:
+  return Object.freeze({
+    /** Generate HTML text */
+    html: () => {
+      switch (card.type) {
+        case 'link':
+        case 'video':
+          return aside(
+            a(
+              { href: card.url, alt: card.title },
+              img({ width: card.width, height: card.height, src: card.image }),
+              caption
+            )
           )
-        )
-      default:
-        return ''
+        default:
+          return ''
+      }
     }
-  }
-  return Object.freeze({ html })
+  })
 }
 
 /** Create an attachment object from the JSON returned from the server. */
-function makeAttachment (attachment, isSensitive) {
-  function _media () {
+function Attachment (attachment, isSensitive) {
+  // Attachment PRIVATE:
+  /** Generate HTML for the media item */
+  function mediaHtml () {
     if (!attachment.meta.small) {
       return ''
     }
@@ -214,36 +229,40 @@ function makeAttachment (attachment, isSensitive) {
         return ''
     }
   }
-  function html () {
-    const media = _media()
-    if (media === '') {
-      return ''
-    }
-    if (!isSensitive) {
-      return media
-    }
-    return details(summary('⚠️🫣 ' + attachment.description), media)
-  }
 
-  return Object.freeze({ html })
+  // Attachment PUBLIC:
+  return Object.freeze({
+    /** Generate HTML text */
+    html: () => {
+      const media = mediaHtml()
+      if (media === '') {
+        return ''
+      }
+      if (!isSensitive) {
+        return media
+      }
+      return details(summary('⚠️🫣 ' + attachment.description), media)
+    }
+  })
 }
 
 const attachmentListHtml = (as, isSensitive) =>
-  as.map((a) => makeAttachment(a, isSensitive).html()).join('')
+  as.map((a) => Attachment(a, isSensitive).html()).join('')
 
 /** Creates a Status object from the JSON returned from the server. */
-function makeStatus (status) {
-  const account = makeAccount(status.account)
+function Status (status) {
+  // Status PRIVATE:
+  const account = Account(status.account)
 
-  function _html () {
+  function html () {
     const mediaSection =
       status.media_attachments && status.media_attachments.length > 0
         ? section(
           attachmentListHtml(status.media_attachments, status.sensitive)
         )
         : ''
-    const cardHtml = status.card ? makeCard(status.card).html() : ''
-    const createdAt = makeDate(status.created_at)
+    const cardHtml = status.card ? Card(status.card).html() : ''
+    const createdAt = HtmlDate(status.created_at)
     const contentSection = section(
       cardHtml,
       status.content,
@@ -260,38 +279,42 @@ function makeStatus (status) {
     })
   }
 
-  function addPrevious (summaryElement) {
-    summaryElement.insertAdjacentHTML('afterend', _html())
-    filterStatus(summaryElement.nextElementSibling)
-    if (!account.sameId(status.in_reply_to_account_id)) {
-      summaryElement.insertAdjacentHTML('afterend', section(account.html()))
-    }
-    if (status.in_reply_to_id) {
-      _addPrevious(summaryElement, status.in_reply_to_id) // no await, so happens asynchronously
-    }
+  async function fetchAndAddAfter (summaryElement) {
+    const inReplyTo = Status(await server.status(status.in_reply_to_id))
+    inReplyTo.addAfter(summaryElement)
   }
 
-  async function _addPrevious (summaryElement) {
-    const inReplyTo = makeStatus(await server.status(status.in_reply_to_id))
-    inReplyTo.addPrevious(summaryElement)
-  }
+  // Status PUBLIC:
+  return Object.freeze({
+    /** Insert into the given parent element the HTML text for this post and any preceding posts in the thread. */
+    thread: async (parentElement) => {
+      parentElement.insertAdjacentHTML(
+        'beforeend',
+        section(account.html()) + html()
+      )
+      filterStatus(parentElement.lastElementChild)
+      if (status.in_reply_to_id) {
+        const detailsElement = document.createElement('details')
+        const summaryElement = document.createElement('summary')
+        summaryElement.innerText = '🧵'
+        detailsElement.append(summaryElement)
+        parentElement.insertAdjacentElement('afterbegin', detailsElement)
+        fetchAndAddAfter(summaryElement, status.in_reply_to_id) // no await, so happens asynchronously
+      }
+    },
 
-  async function thread (articleElement) {
-    articleElement.insertAdjacentHTML(
-      'beforeend',
-      section(account.html()) + _html()
-    )
-    filterStatus(articleElement.lastElementChild)
-    if (status.in_reply_to_id) {
-      const detailsElement = document.createElement('details')
-      const summaryElement = document.createElement('summary')
-      summaryElement.innerText = '🧵'
-      detailsElement.append(summaryElement)
-      articleElement.insertAdjacentElement('afterbegin', detailsElement)
-      _addPrevious(summaryElement, status.in_reply_to_id) // no await, so happens asynchronously
+    /** Insert after the given sibling element the HTML for this post. */
+    addAfter: (siblingElement) => {
+      siblingElement.insertAdjacentHTML('afterend', html())
+      filterStatus(siblingElement.nextElementSibling)
+      if (!account.sameId(status.in_reply_to_account_id)) {
+        siblingElement.insertAdjacentHTML('afterend', section(account.html()))
+      }
+      if (status.in_reply_to_id) {
+        fetchAndAddAfter(siblingElement, status.in_reply_to_id) // no await, so happens asynchronously
+      }
     }
-  }
-  return Object.freeze({ thread, addPrevious })
+  })
 }
 
 async function showTimeline (querySuffix) {
@@ -302,7 +325,7 @@ async function showTimeline (querySuffix) {
   }
   timelineElement.replaceChildren()
   for (const statusJson of statuses) {
-    const status = makeStatus(statusJson)
+    const status = Status(statusJson)
     const articleElement = document.createElement('article')
     timelineElement.append(articleElement)
     await status.thread(articleElement)

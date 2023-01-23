@@ -217,13 +217,14 @@ function Attachment (attachment, isSensitive) {
   // Attachment PRIVATE:
   /** Generate HTML for the media item */
   function mediaHtml () {
-    if (!attachment.meta.small) {
+    if (!attachment.meta || !attachment.meta.small) {
       return ''
     }
     const { width, height } = attachment.meta.small
     switch (attachment.type) {
       case 'image':
       case 'video':
+      case 'gifv':
         return figure(
           a(
             { href: attachment.url },
@@ -235,7 +236,9 @@ function Attachment (attachment, isSensitive) {
             })
           ) + figcaption(attachment.description)
         )
+
       default:
+        console.warn(`Unrecognized media attachment type "${attachment.type}"`)
         return ''
     }
   }

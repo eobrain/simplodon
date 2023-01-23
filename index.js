@@ -6,11 +6,12 @@ import {
   em,
   figure,
   figcaption,
+  h3,
   img,
   p,
   section,
   summary,
-  strong,
+  sub,
   time
 } from 'https://unpkg.com/ez-html-elements'
 
@@ -159,6 +160,12 @@ function HtmlDate (dateString) {
   })
 }
 
+const faviconImg = (host) =>
+  img(['inline'], {
+    src: `https://${host}/favicon.ico`,
+    alt: host
+  })
+
 /** Create an account object from the JSON returned from the server. */
 function Account (account) {
   // Account PUBLIC:
@@ -170,15 +177,17 @@ function Account (account) {
     html: () => {
       const accountServer = account.url.match(/https:\/\/([^/]+)\//)[1]
 
-      return p(
-        img({ src: account.avatar, alt: `avatar of ${account.username}` }) +
-          img({
-            src: `https://${accountServer}/favicon.ico`,
-            alt: `avatar of ${accountServer}`
-          }) +
-          strong(' @' + account.username + '@' + accountServer) +
-          ' ' +
-          em(account.display_name)
+      return (
+        h3(
+          ' @' +
+            account.username +
+            img(['inline'], {
+              src: account.avatar,
+              alt: `@${account.username}`
+            }) +
+            ' ' +
+            sub('@' + accountServer + faviconImg(accountServer))
+        ) + em(account.display_name)
       )
     }
   })
@@ -289,6 +298,16 @@ function Status (status) {
   function filterStatus (statusElement) {
     statusElement.querySelectorAll('a.hashtag').forEach((a) => {
       a.href = a.href.replace(/^.*\/tags\/(.+)$/, '#tags/$1')
+    })
+    statusElement.querySelectorAll('a.u-url').forEach((a) => {
+      const parsed = a.href.match(/^https:\/\/(.+)\/@(.+)$/)
+      if (parsed) {
+        const [, mentionedServer, mentionedPerson] = parsed
+        a.innerHTML =
+          '@' +
+          mentionedPerson +
+          sub('@' + mentionedServer + faviconImg(mentionedServer))
+      }
     })
   }
 

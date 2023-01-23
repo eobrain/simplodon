@@ -27,9 +27,7 @@ const server = (() => {
   const headers = {}
   const origin = 'https://allmastodon.com/simplodon/'
   const CLIENT_ID = 'S1X3r40DyEN6qX8RjxkoL4uRm6arRqEcoYK2NVrHSf8'
-  // const REDIRECT_URI = 'urn:ietf:wg:oauth:2.0:oob'
-  const REDIRECT_URI = 'http://localhost:8000/'
-  // const REDIRECT_URI='https://allmastodon.com/simplodon/' // TODO make dynamic
+  const REDIRECT_URI = document.location.origin + document.location.pathname
 
   const scope = 'read+write+follow'
   const CLIENT_KEY = 'S1X3r40DyEN6qX8RjxkoL4uRm6arRqEcoYK2NVrHSf8'

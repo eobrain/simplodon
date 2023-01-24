@@ -148,6 +148,12 @@ const server = (() => {
     status: async (id) =>
       await (
         await fetch(`https://${hostname}/api/v1/statuses/${id}`, { headers })
+      ).json(),
+
+    /** Lookup account information for a user. */
+    lookupAccount: async (username) =>
+      await (
+        await fetch(`https://${hostname}/api/v1/accounts/lookup?acct=${username}`, { headers })
       ).json()
   })
 })()
@@ -189,7 +195,7 @@ function Account (account) {
       const accountServer = account.url.match(/https:\/\/([^/]+)\//)[1]
 
       return (
-        h3(
+        a({ href: `#accounts/${account.id}` }, h3(
           ' @' +
             account.username +
             img(['inline'], {
@@ -198,11 +204,13 @@ function Account (account) {
             }) +
             ' ' +
             sub('@' + accountServer + faviconImg(accountServer))
-        ) + em(account.display_name)
+        )) + em(account.display_name)
       )
     }
   })
 }
+
+// const accountFromUsername = username => server.
 
 /** Create a card object from the JSON returned from the server. */
 function Card (card) {
@@ -439,7 +447,7 @@ async function app () {
         await showTimeline(`tag/${hashtag}?limit=40`)
         break
       }
-      const accountMatch = document.location.hash.match(/#@(.+)$/)
+      const accountMatch = document.location.hash.match(/#accounts\/(.+)$/)
       if (accountMatch) {
         const accountId = accountMatch[1]
         await showAccountTimeline(accountId, 'limit=40')

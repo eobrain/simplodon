@@ -133,6 +133,17 @@ const server = (() => {
         })
       ).json(),
 
+    /** Fetch data for an account's list of posts. */
+    accountTimeline: async (accountId, querySuffix) =>
+      await (
+        await fetch(
+          `https://${hostname}/api/v1/accounts/${accountId}/statuses?${querySuffix}`,
+          {
+            headers
+          }
+        )
+      ).json(),
+
     /** Fetch data for one post. */
     status: async (id) =>
       await (
@@ -360,8 +371,7 @@ function Status (status) {
   })
 }
 
-async function showTimeline (querySuffix) {
-  const statuses = await server.timeline(querySuffix)
+async function showStatusList (statuses) {
   if (statuses.error) {
     alert(statuses.error)
     return
@@ -373,6 +383,14 @@ async function showTimeline (querySuffix) {
     timelineElement.append(articleElement)
     await status.thread(articleElement)
   }
+}
+
+async function showTimeline (querySuffix) {
+  await showStatusList(await server.timeline(querySuffix))
+}
+
+async function showAccountTimeline (accountId, querySuffix) {
+  await showStatusList(await server.accountTimeline(accountId, querySuffix))
 }
 
 async function hasServer () {
@@ -421,6 +439,13 @@ async function app () {
         await showTimeline(`tag/${hashtag}?limit=40`)
         break
       }
+      const accountMatch = document.location.hash.match(/#@(.+)$/)
+      if (accountMatch) {
+        const accountId = accountMatch[1]
+        await showAccountTimeline(accountId, 'limit=40')
+        break
+      }
+      console.warn(`Unexpected hash ${document.location.hash}`)
     }
   }
 }

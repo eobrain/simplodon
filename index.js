@@ -153,7 +153,10 @@ const server = (() => {
     /** Lookup account information for a user. */
     lookupAccount: async (username) =>
       await (
-        await fetch(`https://${hostname}/api/v1/accounts/lookup?acct=${username}`, { headers })
+        await fetch(
+          `https://${hostname}/api/v1/accounts/lookup?acct=${username}`,
+          { headers }
+        )
       ).json()
   })
 })()
@@ -195,16 +198,19 @@ function Account (account) {
       const accountServer = account.url.match(/https:\/\/([^/]+)\//)[1]
 
       return (
-        a({ href: `#accounts/${account.id}` }, h3(
-          ' @' +
-            account.username +
-            img(['inline'], {
-              src: account.avatar,
-              alt: `@${account.username}`
-            }) +
-            ' ' +
-            sub('@' + accountServer + faviconImg(accountServer))
-        )) + em(account.display_name)
+        a(
+          { href: `#accounts/${account.id}` },
+          h3(
+            ' @' +
+              account.username +
+              img(['inline'], {
+                src: account.avatar,
+                alt: `@${account.username}`
+              }) +
+              ' ' +
+              sub('@' + accountServer + faviconImg(accountServer))
+          )
+        ) + em(account.display_name)
       )
     }
   })

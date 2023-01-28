@@ -15,7 +15,7 @@ import {
   time
 } from 'https://unpkg.com/ez-html-elements'
 
-/* global alert, timelineElement loginElement homeElement, noServerElement headerElement serverElement */
+/* global alert, cssLinkElement, cssSelectElement, timelineElement loginElement homeElement, noServerElement headerElement serverElement */
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -485,4 +485,8 @@ serverElement.addEventListener('keyup', async (event) => {
       await hasServer()
     }
   }
+})
+
+cssSelectElement.addEventListener('change', (event) => {
+  cssLinkElement.setAttribute('href', cssSelectElement.value)
 })

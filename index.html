@@ -1,45 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simplodon</title>
+    <link
+      id="cssLinkElement"
+      rel="stylesheet"
+      href="https://cdn.simplecss.org/simple.min.css"
+    />
+    <link href="index.css" rel="stylesheet" />
+    <script src="index.js" type="module"></script>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simplodon</title>
-  <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css" />
-  <!--link rel="stylesheet" href="https://unpkg.com/axist@latest/dist/axist.min.css" /-->
-  <!--link rel="stylesheet" href="https://unpkg.com/awsm.css/dist/awsm.min.css"-->
-  <!--link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kimeiga/bahunya/dist/bahunya.min.css"-->
-  <!--link rel="stylesheet" href="https://unpkg.com/bamboo.css"-->
-  <!--link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/longsien/BareCSS/css/bare.min.css"-->
-  <!--link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vladocar/Basic.css/css/basic.min.css"-->
-  <!--link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/waldyrious/downstyler/downstyler.css"-->
+  <body>
+    <header>
+      <h1 id="headerElement">(no server)</h1>
+      <form>
+        <select id="cssSelectElement">
+          <option value="https://cdn.simplecss.org/simple.min.css">
+            Simple
+          </option>
+          <option value="https://unpkg.com/axist@latest/dist/axist.min.css">
+            Axist
+          </option>
+          <option value="https://unpkg.com/awsm.css/dist/awsm.min.css">
+            Awsm
+          </option>
+          <option
+            value="https://cdn.jsdelivr.net/gh/kimeiga/bahunya/dist/bahunya.min.css"
+          >
+            Bahunya
+          </option>
+          <option value="https://unpkg.com/bamboo.css">Bamboo</option>
+          <option
+            value="https://cdn.jsdelivr.net/gh/longsien/BareCSS/css/bare.min.css"
+          >
+            BareCSS
+          </option>
+          <option
+            value="https://cdn.jsdelivr.net/gh/vladocar/Basic.css/css/basic.min.css"
+          >
+            Basic
+          </option>
+          <option
+            value="https://cdn.jsdelivr.net/gh/waldyrious/downstyler/downstyler.css"
+          >
+            Downstyler
+          </option>
+          <!--option value="">XXX</option>
+            <option value="">XXX</option>
+            <option value="">XXX</option>
+            <option value="">XXX</option-->
+        </select>
+      </form>
+      <nav>
+        <a href="#public">🌐</a>
+        <a href="#public/local">🧑🏽‍🤝‍🧑🏽</a>
+        <a href="#changeserver">🖧</a>
+        <a class="#home" id="homeElement" href="#">🏠</a>
+        <a class="hidden" id="loginElement" href="#">🔑</a>
+      </nav>
+    </header>
 
-  <link href="index.css" rel="stylesheet" />
-  <script src="index.js" type="module"></script>
-</head>
+    <aside class="hidden" id="noServerElement">
+      <label
+        >Server
+        <input name="server" id="serverElement" />
+      </label>
+    </aside>
+    <main id="timelineElement"></main>
 
-<body>
-  <header>
-    <h1 id="headerElement">(no server)</h1>
-    <nav>
-      <a href="#public">🌐</a>
-      <a href="#public/local">🧑🏽‍🤝‍🧑🏽</a>
-      <a href="#changeserver">🖧</a>
-      <a class="#home" id="homeElement" href="#">🏠</a>
-      <a class="hidden" id="loginElement" href="#">🔑</a>
-    </nav>
-  </header>
-
-  <aside class="hidden" id="noServerElement">
-    <label>Server
-      <input name="server" id="serverElement" />
-    </label>
-  </aside>
-  <main id="timelineElement"></main>
-
-  <footer>
-    <p>Simplodon</p>
-  </footer>
-</body>
-
+    <footer>
+      <p>Simplodon</p>
+    </footer>
+  </body>
 </html>

@@ -385,11 +385,12 @@ function Status (status) {
   })
 }
 
-async function showStatusList (statuses) {
+async function showStatusList (header, statuses) {
   if (statuses.error) {
     alert(statuses.error)
     return
   }
+  headerElement.innerHTML = header
   timelineElement.replaceChildren()
   for (const statusJson of statuses) {
     const status = Status(statusJson)
@@ -399,12 +400,15 @@ async function showStatusList (statuses) {
   }
 }
 
-async function showTimeline (querySuffix) {
-  await showStatusList(await server.timeline(querySuffix))
+async function showTimeline (header, querySuffix) {
+  await showStatusList(header, await server.timeline(querySuffix))
 }
 
 async function showAccountTimeline (accountId, querySuffix) {
-  await showStatusList(await server.accountTimeline(accountId, querySuffix))
+  await showStatusList(
+    '🧑',
+    await server.accountTimeline(accountId, querySuffix)
+  )
 }
 
 async function hasServer () {
@@ -421,6 +425,7 @@ async function hasServer () {
 async function noServer () {
   loginElement.classList.add('hidden')
   noServerElement.classList.remove('hidden')
+  headerElement.innerHTML = ''
 }
 
 async function app () {
@@ -433,13 +438,13 @@ async function app () {
   }
   switch (document.location.hash) {
     case '#home':
-      await showTimeline('home?limit=40')
+      await showTimeline('🏠', 'home?limit=40')
       break
     case '#public':
-      await showTimeline('public?limit=40')
+      await showTimeline('🌐', 'public?limit=40')
       break
     case '#public/local':
-      await showTimeline('public?limit=40&local=true')
+      await showTimeline('🧑🏽‍🤝‍🧑🏽', 'public?limit=40&local=true')
       break
     case '#changeserver':
       server.removeHostname()
@@ -450,7 +455,7 @@ async function app () {
       const hashtagMatch = document.location.hash.match(/#tags\/(.+)$/)
       if (hashtagMatch) {
         const hashtag = hashtagMatch[1]
-        await showTimeline(`tag/${hashtag}?limit=40`)
+        await showTimeline(`#${hashtag}`, `tag/${hashtag}?limit=40`)
         break
       }
       const accountMatch = document.location.hash.match(/#accounts\/(.+)$/)

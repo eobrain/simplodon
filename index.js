@@ -1,16 +1,13 @@
 import server from './server.js'
 import Account from './Account.js'
+import Attachment from './Attachment.js'
 import Card from './Card.js'
 import Host from './Host.js'
 import HtmlDate from './HtmlDate.js'
 import {
-  a,
   details,
   div,
   em,
-  figure,
-  figcaption,
-  img,
   p,
   section,
   summary,
@@ -30,53 +27,6 @@ function settings (shown) {
 }
 
 // const accountFromUsername = username => server.
-
-/** Create an attachment object from the JSON returned from the server. */
-function Attachment (attachment, isSensitive) {
-  // Attachment PRIVATE:
-  /** Generate HTML for the media item */
-  function mediaHtml () {
-    if (!attachment.meta || !attachment.meta.small) {
-      return ''
-    }
-    const { width, height } = attachment.meta.small
-    switch (attachment.type) {
-      case 'image':
-      case 'video':
-      case 'gifv':
-        return figure(
-          a(
-            { href: attachment.url },
-            img({
-              alt: attachment.description,
-              src: attachment.preview_url,
-              width,
-              height
-            })
-          ) + figcaption(attachment.description)
-        )
-
-      default:
-        console.warn(`Unrecognized media attachment type "${attachment.type}"`)
-        return ''
-    }
-  }
-
-  // Attachment PUBLIC:
-  return Object.freeze({
-    /** Generate HTML text */
-    html: () => {
-      const media = mediaHtml()
-      if (media === '') {
-        return ''
-      }
-      if (!isSensitive) {
-        return media
-      }
-      return details(summary('⚠️🫣 ' + attachment.description), media)
-    }
-  })
-}
 
 const attachmentListHtml = (as, isSensitive) =>
   as.map((a) => Attachment(a, isSensitive).html()).join('')

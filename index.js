@@ -1,4 +1,5 @@
 import server from './server.js'
+import HtmlDate from './HtmlDate.js'
 import {
   a,
   aside,
@@ -12,8 +13,7 @@ import {
   p,
   section,
   summary,
-  sub,
-  time
+  sub
 } from 'https://unpkg.com/ez-html-elements'
 
 /* global alert $settings $cssSelect $timeline $login $header $server */
@@ -26,27 +26,6 @@ function settings (shown) {
     $timeline.classList.remove('hidden')
     $settings.classList.add('hidden')
   }
-}
-
-const DAY_MS = 24 * 60 * 60 * 1000
-
-/** Create a date object from a standard string representation */
-function HtmlDate (dateString) {
-  // HtmlDate PRIVATE:
-  function localeString (dateString) {
-    const dateMs = Date.parse(dateString)
-    const date = new Date()
-    date.setTime(dateMs)
-    return dateMs > Date.now() - DAY_MS
-      ? date.toLocaleTimeString()
-      : date.toLocaleDateString()
-  }
-
-  // HtmlDate PUBLIC:
-  return Object.freeze({
-    /** Generate HTML text */
-    html: () => p(time({ datetime: dateString }, localeString(dateString)))
-  })
 }
 
 const faviconImg = (host) =>

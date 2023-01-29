@@ -15,7 +15,17 @@ import {
   time
 } from 'https://unpkg.com/ez-html-elements'
 
-/* global alert, cssLinkElement, cssSelectElement, timelineElement loginElement homeElement, noServerElement headerElement serverElement */
+/* global alert, $settings, cssLinkElement, cssSelectElement, timelineElement loginElement homeElement, headerElement serverElement */
+
+function settings (shown) {
+  if (shown) {
+    timelineElement.classList.add('hidden')
+    $settings.classList.remove('hidden')
+  } else {
+    timelineElement.classList.remove('hidden')
+    $settings.classList.add('hidden')
+  }
+}
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -428,17 +438,18 @@ async function showAccountTimeline (accountId, querySuffix) {
 async function hasServer () {
   server.setAuthorizeHref(loginElement)
   loginElement.classList.remove('hidden')
-  noServerElement.classList.add('hidden')
+  settings(true)
   if (!document.location.hash || document.location.hash === '#') {
     document.location.hash = server.isLoggedIn ? '#home' : '#public'
   } else {
     app()
   }
+  settings(false)
 }
 
 async function noServer () {
   loginElement.classList.add('hidden')
-  noServerElement.classList.remove('hidden')
+  settings(true)
   headerElement.innerHTML = ''
 }
 
@@ -464,6 +475,9 @@ async function app () {
       server.removeHostname()
       noServer()
       document.location.hash = ''
+      break
+    case '#settings':
+      settings(true)
       break
     default: {
       const hashtagMatch = document.location.hash.match(/#tags\/(.+)$/)
@@ -503,4 +517,7 @@ serverElement.addEventListener('keyup', async (event) => {
 
 cssSelectElement.addEventListener('change', (event) => {
   server.setCssTheme()
+  settings(false)
 })
+
+app()

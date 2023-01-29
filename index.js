@@ -1,10 +1,10 @@
 import server from './server.js'
-import HtmlDate from './HtmlDate.js'
 import Account from './Account.js'
+import Card from './Card.js'
 import Host from './Host.js'
+import HtmlDate from './HtmlDate.js'
 import {
   a,
-  aside,
   details,
   div,
   em,
@@ -30,34 +30,6 @@ function settings (shown) {
 }
 
 // const accountFromUsername = username => server.
-
-/** Create a card object from the JSON returned from the server. */
-function Card (card) {
-  // Card PRIVATE:
-  const caption =
-    a({ href: card.url }, card.title) +
-    (card.description ? p(card.description) : '')
-
-  // Card PUBLIC:
-  return Object.freeze({
-    /** Generate HTML text */
-    html: () => {
-      switch (card.type) {
-        case 'link':
-        case 'video':
-          return aside(
-            a(
-              { href: card.url, alt: card.title },
-              img({ width: card.width, height: card.height, src: card.image }),
-              caption
-            )
-          )
-        default:
-          return ''
-      }
-    }
-  })
-}
 
 /** Create an attachment object from the JSON returned from the server. */
 function Attachment (attachment, isSensitive) {

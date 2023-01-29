@@ -27,6 +27,18 @@ function settings (shown) {
   }
 }
 
+function navLoggededIn (shown) {
+  if (shown) {
+    // When logged in show $home
+    $home.classList.remove('hidden')
+    $login.classList.add('hidden')
+  } else {
+    // When not logged in show $login
+    $home.classList.add('hidden')
+    $login.classList.remove('hidden')
+  }
+}
+
 const DAY_MS = 24 * 60 * 60 * 1000
 
 /** Singleton object encapsulating interactions with the Mastodon server. */
@@ -52,7 +64,7 @@ const server = (() => {
 
   const token = async (code) =>
     await (
-      await fetch(`https://${hostname}/oauth/token`, {
+      await fetch(`https://${$server.value}/oauth/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: urlParams({
@@ -75,18 +87,17 @@ const server = (() => {
   function update () {
     updateCssTheme()
 
-    $header.innerHTML = hostname || '(no hostname)'
+    $header.innerHTML = $server.value || '(no hostname)'
     if (accessToken) {
-      $home.classList.add('hidden')
       headers.Authorization = `${tokenType} ${accessToken}`
     } else {
-      $home.classList.remove('hidden')
       delete headers.Authorization
     }
+    navLoggededIn(accessToken)
   }
 
   // server CONSTRUCTOR:
-  let hostname = window.localStorage.getItem(SERVER_KEY)
+  $server.value = window.localStorage.getItem(SERVER_KEY)
   let accessToken = window.localStorage.getItem(ACCESS_TOKEN_KEY)
   let tokenType = window.localStorage.getItem(TOKEN_TYPE_KEY)
   $cssSelect.selectedIndex = window.localStorage.getItem(CSS_KEY) || 0
@@ -95,12 +106,12 @@ const server = (() => {
   // server PUBLIC:
   return Object.freeze({
     /** Has a hostname been defined (from user or from localStorage)? */
-    hasHostname: () => !!hostname,
+    hasHostname: () => !!$server.value,
 
     /** Set hostname as entered by user, and store in localStorage */
     setHostname: (name) => {
-      hostname = name
-      window.localStorage.setItem(SERVER_KEY, hostname)
+      $server.value = name
+      window.localStorage.setItem(SERVER_KEY, $server.value)
       // TODO: update select to correct option (be careful of infinite loop)
       update()
     },
@@ -115,7 +126,7 @@ const server = (() => {
 
     /** Kick off the first step in the OAuth flow by sending the user to the server. */
     setAuthorizeHref: ($anchor) => {
-      $anchor.href = `https://${hostname}/oauth/authorize?${urlParams({
+      $anchor.href = `https://${$server.value}/oauth/authorize?${urlParams({
         force_login: false,
         scope,
         /* eslint-disable camelcase -- because Mastodon API has camelcase JSON fields */
@@ -141,7 +152,7 @@ const server = (() => {
 
     /** Logout and disconnect from the server (deleting everything from localstorage) */
     removeHostname: () => {
-      hostname = null
+      $server.value = null
       accessToken = null
       window.localStorage.removeItem(SERVER_KEY)
       window.localStorage.removeItem(ACCESS_TOKEN_KEY)
@@ -152,16 +163,19 @@ const server = (() => {
     /** Fetch data for a list of posts. */
     timeline: async (querySuffix) =>
       await (
-        await fetch(`https://${hostname}/api/v1/timelines/${querySuffix}`, {
-          headers
-        })
+        await fetch(
+          `https://${$server.value}/api/v1/timelines/${querySuffix}`,
+          {
+            headers
+          }
+        )
       ).json(),
 
     /** Fetch data for an account's list of posts. */
     accountTimeline: async (accountId, querySuffix) =>
       await (
         await fetch(
-          `https://${hostname}/api/v1/accounts/${accountId}/statuses?${querySuffix}`,
+          `https://${$server.value}/api/v1/accounts/${accountId}/statuses?${querySuffix}`,
           {
             headers
           }
@@ -171,14 +185,16 @@ const server = (() => {
     /** Fetch data for one post. */
     status: async (id) =>
       await (
-        await fetch(`https://${hostname}/api/v1/statuses/${id}`, { headers })
+        await fetch(`https://${$server.value}/api/v1/statuses/${id}`, {
+          headers
+        })
       ).json(),
 
     /** Lookup account information for a user. */
     lookupAccount: async (username) =>
       await (
         await fetch(
-          `https://${hostname}/api/v1/accounts/lookup?acct=${username}`,
+          `https://${$server.value}/api/v1/accounts/lookup?acct=${username}`,
           { headers }
         )
       ).json()
@@ -431,10 +447,10 @@ async function showAccountTimeline (accountId, querySuffix) {
 
 async function hasServer () {
   server.setAuthorizeHref($login)
-  $login.classList.remove('hidden')
-  settings(true)
+  navLoggededIn(server.isLoggedIn())
+  settings(false)
   if (!document.location.hash || document.location.hash === '#') {
-    document.location.hash = server.isLoggedIn ? '#home' : '#public'
+    document.location.hash = server.isLoggedIn() ? '#home' : '#public'
   } else {
     app()
   }
@@ -442,17 +458,24 @@ async function hasServer () {
 }
 
 async function noServer () {
-  $login.classList.add('hidden')
+  navLoggededIn(false)
   settings(true)
   $header.innerHTML = ''
 }
 
+let appRunning = false
 async function app () {
+  if (appRunning) {
+    return
+  }
+  appRunning = true
+
   const codeMatch = document.location.search.match(/code=(.+)$/)
   if (codeMatch) {
     await server.login(codeMatch[1])
     document.location.search = ''
     document.location.hash = '#home'
+    appRunning = false
     return
   }
   switch (document.location.hash) {
@@ -464,11 +487,6 @@ async function app () {
       break
     case '#public/local':
       await showTimeline('🧑🏽‍🤝‍🧑🏽', 'public?limit=40&local=true')
-      break
-    case '#changeserver':
-      server.removeHostname()
-      noServer()
-      document.location.hash = ''
       break
     case '#settings':
       settings(true)
@@ -489,6 +507,7 @@ async function app () {
       console.warn(`Unexpected hash ${document.location.hash}`)
     }
   }
+  appRunning = false
 }
 
 window.onhashchange = app

@@ -15,14 +15,14 @@ import {
   time
 } from 'https://unpkg.com/ez-html-elements'
 
-/* global alert, $settings, cssLinkElement, cssSelectElement, timelineElement loginElement homeElement, headerElement serverElement */
+/* global alert, $settings, $cssLink, $cssSelect, $timeline $login $home, $header, $server */
 
 function settings (shown) {
   if (shown) {
-    timelineElement.classList.add('hidden')
+    $timeline.classList.add('hidden')
     $settings.classList.remove('hidden')
   } else {
-    timelineElement.classList.remove('hidden')
+    $timeline.classList.remove('hidden')
     $settings.classList.add('hidden')
   }
 }
@@ -69,18 +69,18 @@ const server = (() => {
     ).json()
 
   function updateCssTheme () {
-    cssLinkElement.setAttribute('href', cssSelectElement.value)
+    $cssLink.setAttribute('href', $cssSelect.value)
   }
 
   function update () {
     updateCssTheme()
 
-    headerElement.innerHTML = hostname || '(no hostname)'
+    $header.innerHTML = hostname || '(no hostname)'
     if (accessToken) {
-      homeElement.classList.add('hidden')
+      $home.classList.add('hidden')
       headers.Authorization = `${tokenType} ${accessToken}`
     } else {
-      homeElement.classList.remove('hidden')
+      $home.classList.remove('hidden')
       delete headers.Authorization
     }
   }
@@ -89,7 +89,7 @@ const server = (() => {
   let hostname = window.localStorage.getItem(SERVER_KEY)
   let accessToken = window.localStorage.getItem(ACCESS_TOKEN_KEY)
   let tokenType = window.localStorage.getItem(TOKEN_TYPE_KEY)
-  cssSelectElement.selectedIndex = window.localStorage.getItem(CSS_KEY) || 0
+  $cssSelect.selectedIndex = window.localStorage.getItem(CSS_KEY) || 0
   update()
 
   // server PUBLIC:
@@ -106,7 +106,7 @@ const server = (() => {
     },
 
     setCssTheme: () => {
-      window.localStorage.setItem(CSS_KEY, cssSelectElement.selectedIndex)
+      window.localStorage.setItem(CSS_KEY, $cssSelect.selectedIndex)
       updateCssTheme()
     },
 
@@ -114,8 +114,8 @@ const server = (() => {
     isLoggedIn: () => !!accessToken,
 
     /** Kick off the first step in the OAuth flow by sending the user to the server. */
-    setAuthorizeHref: (anchorElement) => {
-      anchorElement.href = `https://${hostname}/oauth/authorize?${urlParams({
+    setAuthorizeHref: ($anchor) => {
+      $anchor.href = `https://${hostname}/oauth/authorize?${urlParams({
         force_login: false,
         scope,
         /* eslint-disable camelcase -- because Mastodon API has camelcase JSON fields */
@@ -344,11 +344,11 @@ function Status (status) {
       : div(contentSection + mediaSection)
   }
 
-  function filterStatus (statusElement) {
-    statusElement.querySelectorAll('a.hashtag').forEach((a) => {
+  function filterStatus ($status) {
+    $status.querySelectorAll('a.hashtag').forEach((a) => {
       a.href = a.href.replace(/^.*\/tags\/(.+)$/, '#tags/$1')
     })
-    statusElement.querySelectorAll('a.u-url').forEach((a) => {
+    $status.querySelectorAll('a.u-url').forEach((a) => {
       const parsed = a.href.match(/^https:\/\/(.+)\/@(.+)$/)
       if (parsed) {
         const [, mentionedServer, mentionedPerson] = parsed
@@ -360,50 +360,44 @@ function Status (status) {
     })
   }
 
-  async function fetchAndAddAfter (summaryElement) {
+  async function fetchAndAddAfter ($summary) {
     const inReplyTo = Status(await server.status(status.in_reply_to_id))
-    inReplyTo.addAfter(summaryElement)
+    inReplyTo.addAfter($summary)
   }
 
   // Status PUBLIC:
   return Object.freeze({
     /** Insert into the given parent element the HTML text for this post and any preceding posts in the thread. */
-    thread: async (parentElement) => {
+    thread: async ($parent) => {
       if (status.reblog) {
-        parentElement.insertAdjacentHTML(
-          'beforeend',
-          section(account.html() + '♻️')
-        )
-        const subArticleElement = document.createElement('article')
-        Status(status.reblog).thread(subArticleElement)
-        parentElement.append(subArticleElement)
+        $parent.insertAdjacentHTML('beforeend', section(account.html() + '♻️'))
+        const $subArticle = document.createElement('article')
+        Status(status.reblog).thread($subArticle)
+        $parent.append($subArticle)
         return
       }
 
-      parentElement.insertAdjacentHTML(
-        'beforeend',
-        section(account.html()) + html()
-      )
-      filterStatus(parentElement.lastElementChild)
+      $parent.insertAdjacentHTML('beforeend', section(account.html()) + html())
+      filterStatus($parent.lastElementChild)
       if (status.in_reply_to_id) {
-        const detailsElement = document.createElement('details')
-        const summaryElement = document.createElement('summary')
-        summaryElement.innerText = '🧵'
-        detailsElement.append(summaryElement)
-        parentElement.insertAdjacentElement('afterbegin', detailsElement)
-        fetchAndAddAfter(summaryElement, status.in_reply_to_id) // no await, so happens asynchronously
+        const $details = document.createElement('details')
+        const $summary = document.createElement('summary')
+        $summary.innerText = '🧵'
+        $details.append($summary)
+        $parent.insertAdjacentElement('afterbegin', $details)
+        fetchAndAddAfter($summary, status.in_reply_to_id) // no await, so happens asynchronously
       }
     },
 
     /** Insert after the given sibling element the HTML for this post. */
-    addAfter: (siblingElement) => {
-      siblingElement.insertAdjacentHTML('afterend', html())
-      filterStatus(siblingElement.nextElementSibling)
+    addAfter: ($sibling) => {
+      $sibling.insertAdjacentHTML('afterend', html())
+      filterStatus($sibling.nextElementSibling)
       if (!account.sameId(status.in_reply_to_account_id)) {
-        siblingElement.insertAdjacentHTML('afterend', section(account.html()))
+        $sibling.insertAdjacentHTML('afterend', section(account.html()))
       }
       if (status.in_reply_to_id) {
-        fetchAndAddAfter(siblingElement, status.in_reply_to_id) // no await, so happens asynchronously
+        fetchAndAddAfter($sibling, status.in_reply_to_id) // no await, so happens asynchronously
       }
     }
   })
@@ -414,13 +408,13 @@ async function showStatusList (header, statuses) {
     alert(statuses.error)
     return
   }
-  headerElement.innerHTML = header
-  timelineElement.replaceChildren()
+  $header.innerHTML = header
+  $timeline.replaceChildren()
   for (const statusJson of statuses) {
     const status = Status(statusJson)
-    const articleElement = document.createElement('article')
-    timelineElement.append(articleElement)
-    await status.thread(articleElement)
+    const $article = document.createElement('article')
+    $timeline.append($article)
+    await status.thread($article)
   }
 }
 
@@ -436,8 +430,8 @@ async function showAccountTimeline (accountId, querySuffix) {
 }
 
 async function hasServer () {
-  server.setAuthorizeHref(loginElement)
-  loginElement.classList.remove('hidden')
+  server.setAuthorizeHref($login)
+  $login.classList.remove('hidden')
   settings(true)
   if (!document.location.hash || document.location.hash === '#') {
     document.location.hash = server.isLoggedIn ? '#home' : '#public'
@@ -448,9 +442,9 @@ async function hasServer () {
 }
 
 async function noServer () {
-  loginElement.classList.add('hidden')
+  $login.classList.add('hidden')
   settings(true)
-  headerElement.innerHTML = ''
+  $header.innerHTML = ''
 }
 
 async function app () {
@@ -505,9 +499,9 @@ if (server.hasHostname()) {
   noServer()
 }
 
-serverElement.addEventListener('keyup', async (event) => {
+$server.addEventListener('keyup', async (event) => {
   if (event.key === 'Enter') {
-    const hostname = serverElement.value.trim()
+    const hostname = $server.value.trim()
     if (hostname && hostname.match(/[a-z]+\.[a-z]+/)) {
       server.setHostname(hostname)
       await hasServer()
@@ -515,7 +509,7 @@ serverElement.addEventListener('keyup', async (event) => {
   }
 })
 
-cssSelectElement.addEventListener('change', (event) => {
+$cssSelect.addEventListener('change', (event) => {
   server.setCssTheme()
   settings(false)
 })

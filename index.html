@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Simplodon</title>
     <link
-      id="cssLinkElement"
+      id="$cssLink"
       rel="stylesheet"
       href="https://cdn.simplecss.org/simple.min.css"
     />
@@ -15,25 +15,25 @@
 
   <body>
     <header>
-      <h1 id="headerElement">(no server)</h1>
+      <h1 id="$header">(no server)</h1>
       <nav>
         <a href="#settings">⚙️</a>
         <a href="#public">🌐</a>
         <a href="#public/local">🧑🏽‍🤝‍🧑🏽</a>
         <a href="#changeserver">🖧</a>
-        <a class="#home" id="homeElement" href="#">🏠</a>
-        <a class="hidden" id="loginElement" href="#">🔑</a>
+        <a class="#home" id="$home" href="#">🏠</a>
+        <a class="hidden" id="$login" href="#">🔑</a>
       </nav>
     </header>
 
-    <main id="timelineElement"></main>
+    <main id="$timeline"></main>
     <main id="$settings" class="hidden">
       <section>
-        <label>🖧<input name="server" id="serverElement" /></label>
+        <label>🖧<input name="server" id="$server" /></label>
       </section>
       <section>
         <form>
-          <select id="cssSelectElement">
+          <select id="$cssSelect">
             <option value="https://cdn.simplecss.org/simple.min.css">
               Simple
             </option>

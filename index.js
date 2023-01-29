@@ -1,5 +1,7 @@
 import server from './server.js'
 import HtmlDate from './HtmlDate.js'
+import Account from './Account.js'
+import Host from './Host.js'
 import {
   a,
   aside,
@@ -8,7 +10,6 @@ import {
   em,
   figure,
   figcaption,
-  h3,
   img,
   p,
   section,
@@ -26,42 +27,6 @@ function settings (shown) {
     $timeline.classList.remove('hidden')
     $settings.classList.add('hidden')
   }
-}
-
-const faviconImg = (host) =>
-  img(['inline'], {
-    src: `https://${host}/favicon.ico`,
-    alt: host
-  })
-
-/** Create an account object from the JSON returned from the server. */
-function Account (account) {
-  // Account PUBLIC:
-  return Object.freeze({
-    /** Is the given id the same as this account's id? */
-    sameId: (id) => id === account.id,
-
-    /** Generate HTML text */
-    html: () => {
-      const accountServer = account.url.match(/https:\/\/([^/]+)\//)[1]
-
-      return (
-        a(
-          { href: `#accounts/${account.id}` },
-          h3(
-            ' @' +
-              account.username +
-              img(['inline'], {
-                src: account.avatar,
-                alt: `@${account.username}`
-              }) +
-              ' ' +
-              sub('@' + accountServer + faviconImg(accountServer))
-          )
-        ) + em(account.display_name)
-      )
-    }
-  })
 }
 
 // const accountFromUsername = username => server.
@@ -179,7 +144,7 @@ function Status (status) {
         a.innerHTML =
           '@' +
           mentionedPerson +
-          sub('@' + mentionedServer + faviconImg(mentionedServer))
+          sub('@' + mentionedServer + Host(mentionedServer).faviconHtml())
       }
     })
   }

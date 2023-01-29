@@ -25,7 +25,7 @@ const server = (() => {
   const SERVER_KEY = 'server'
   const ACCESS_TOKEN_KEY = 'access_token'
   const TOKEN_TYPE_KEY = 'token_type'
-  const CSS_KEY = 'css'
+  const CSS_KEY = 'css_index'
   const headers = {}
   const origin = 'https://allmastodon.com/simplodon/'
   const scope = 'read+write+follow'
@@ -59,13 +59,12 @@ const server = (() => {
     ).json()
 
   function updateCssTheme () {
-    if (cssUrl) {
-      cssLinkElement.setAttribute('href', cssUrl)
-    }
+    cssLinkElement.setAttribute('href', cssSelectElement.value)
   }
 
   function update () {
     updateCssTheme()
+
     headerElement.innerHTML = hostname || '(no hostname)'
     if (accessToken) {
       homeElement.classList.add('hidden')
@@ -80,7 +79,7 @@ const server = (() => {
   let hostname = window.localStorage.getItem(SERVER_KEY)
   let accessToken = window.localStorage.getItem(ACCESS_TOKEN_KEY)
   let tokenType = window.localStorage.getItem(TOKEN_TYPE_KEY)
-  let cssUrl = window.localStorage.getItem(CSS_KEY)
+  cssSelectElement.selectedIndex = window.localStorage.getItem(CSS_KEY) || 0
   update()
 
   // server PUBLIC:
@@ -96,9 +95,8 @@ const server = (() => {
       update()
     },
 
-    setCssTheme: (newCssUrl) => {
-      cssUrl = newCssUrl
-      window.localStorage.setItem(CSS_KEY, cssUrl)
+    setCssTheme: () => {
+      window.localStorage.setItem(CSS_KEY, cssSelectElement.selectedIndex)
       updateCssTheme()
     },
 
@@ -504,5 +502,5 @@ serverElement.addEventListener('keyup', async (event) => {
 })
 
 cssSelectElement.addEventListener('change', (event) => {
-  server.setCssTheme(cssSelectElement.value)
+  server.setCssTheme()
 })

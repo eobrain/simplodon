@@ -5,6 +5,7 @@
 
 img.inline {
   height: 1em;
+  width: 1em;
 }
 
 .ellipsis::after {

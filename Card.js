@@ -17,7 +17,12 @@ export default (card) => {
           return aside(
             a(
               { href: card.url, alt: card.title },
-              img({ width: card.width, height: card.height, src: card.image }),
+              img({
+                width: card.width,
+                height: card.height,
+                src: card.image,
+                alt: card.title
+              }),
               caption
             )
           )

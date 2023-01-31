@@ -1,126 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simplodon</title>
-    <link
-      id="$cssLink"
-      rel="stylesheet"
-      href="https://cdn.simplecss.org/simple.min.css"
-    />
-    <link href="index.css" rel="stylesheet" />
-    <script src="index.js" type="module"></script>
-  </head>
 
-  <body>
-    <header>
-      <h1 id="$header">(no server)</h1>
-      <nav>
-        <a href="#settings"><button>⚙️</button></a>
-        <a href="#public"><button>🌐</button></a>
-        <a href="#public/local"><button>🧑🏽‍🤝‍🧑🏽</button></a>
-        <a class="hidden" id="$home" href="#home"><button>🏠</button></a>
-        <a class="hidden" id="$login" href="#"><button>🔑</button></a>
-      </nav>
-    </header>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Mastodon Client">
+  <title>Simplodon</title>
+  <link id="$cssLink" rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css" />
+  <link href="index.css" rel="stylesheet" />
+  <script src="index.js" type="module"></script>
+</head>
 
-    <main id="$timeline"></main>
-    <main id="$settings" class="hidden">
-      <section>
-        <label>🖧<input name="server" id="$server" /></label>
-      </section>
-      <section>
-        <form>
-          <select id="$cssSelect">
-            <option value="https://cdn.simplecss.org/simple.min.css">
-              Simple
-            </option>
-            <!--option value="https://unpkg.com/axist@latest/dist/axist.min.css">
+<body>
+  <header>
+    <h1 id="$header">(no server)</h1>
+    <nav>
+      <a href="#settings"><button>⚙️</button></a>
+      <a href="#public"><button>🌐</button></a>
+      <a href="#public/local"><button>🧑🏽‍🤝‍🧑🏽</button></a>
+      <a class="hidden" id="$home" href="#home"><button>🏠</button></a>
+      <a class="hidden" id="$login" href="#"><button>🔑</button></a>
+    </nav>
+  </header>
+
+  <main id="$timeline"></main>
+  <main id="$settings" class="hidden">
+    <section>
+      <label>🖧<input name="server" id="$server" /></label>
+    </section>
+    <section>
+      <form>
+        <select id="$cssSelect">
+          <option value="https://cdn.simplecss.org/simple.min.css">
+            Simple
+          </option>
+          <!--option value="https://unpkg.com/axist@latest/dist/axist.min.css">
             axist
           </option-->
-            <!--option value="https://unpkg.com/awsm.css/dist/awsm.min.css">
+          <!--option value="https://unpkg.com/awsm.css/dist/awsm.min.css">
             awsm.css
           </option-->
-            <!--option
+          <!--option
             value="https://cdn.jsdelivr.net/gh/kimeiga/bahunya/dist/bahunya.min.css"
           >
           Bahunya
           </option-->
-            <!--option value="https://unpkg.com/bamboo.css">Bamboo CSS</option-->
-            <!--option
+          <!--option value="https://unpkg.com/bamboo.css">Bamboo CSS</option-->
+          <!--option
             value="https://cdn.jsdelivr.net/gh/longsien/BareCSS/css/bare.min.css"
           >
           BareCSS
           </option-->
-            <option
-              value="https://cdn.jsdelivr.net/gh/vladocar/Basic.css/css/basic.min.css"
-            >
-              Basic
-            </option>
-            <option
-              value="https://cdn.jsdelivr.net/gh/waldyrious/downstyler/downstyler.css"
-            >
-              Downstyler
-            </option>
-            <option value="https://cdn.jsdelivr.net/npm/holiday.css@0.9.8">
-              holiday
-            </option>
-            <!--option value="https://cdn.jsdelivr.net/gh/davidrzs/latexcss/latex.css">LatexCSS</option-->
-            <!--option value="https://unpkg.com/marx-css/css/marx.min.css">Marx</option-->
-            <!--option value="https://cdn.jsdelivr.net/gh/wmeredith/MercuryCSS/dist/mercury.css">MercuryCSS</option-->
-            <!--option value="https://unpkg.com/mvp.css@1.12/mvp.css">MVP.css</option-->
-            <option
-              value="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1/new.min.css"
-            >
-              new
-            </option>
-            <!--option
+          <option value="https://cdn.jsdelivr.net/gh/vladocar/Basic.css/css/basic.min.css">
+            Basic
+          </option>
+          <option value="https://cdn.jsdelivr.net/gh/waldyrious/downstyler/downstyler.css">
+            Downstyler
+          </option>
+          <option value="https://cdn.jsdelivr.net/npm/holiday.css@0.9.8">
+            holiday
+          </option>
+          <!--option value="https://cdn.jsdelivr.net/gh/davidrzs/latexcss/latex.css">LatexCSS</option-->
+          <!--option value="https://unpkg.com/marx-css/css/marx.min.css">Marx</option-->
+          <!--option value="https://cdn.jsdelivr.net/gh/wmeredith/MercuryCSS/dist/mercury.css">MercuryCSS</option-->
+          <!--option value="https://unpkg.com/mvp.css@1.12/mvp.css">MVP.css</option-->
+          <option value="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1/new.min.css">
+            new
+          </option>
+          <!--option
             value="https://cdn.jsdelivr.net/gh/davidpaulsson/no-class/releases/download/1.0.1/no-class.min.css"
           >
             MercuryCSS
           </option-->
-            <!--option
+          <!--option
             value="https://unpkg.com/@picocss/pico@latest/css/pico.min.css"
           >
             Pico
           </option-->
-            <!--option value="https://cdn.jsdelivr.net/gh/oxalorg/sakura/css/sakura.css">sakura</option-->
-            <option value="https://cdn.jsdelivr.net/npm/spcss">SPCSS</option>
-            <!--option value="https://unpkg.com/style.css">style.css</option-->
-            <!--option value="https://cdn.jsdelivr.net/gh/vasanthv/stylize.css/blob/master/stylize.min.css">Stylize.css</option-->
-            <option
-              value="https://cdn.jsdelivr.net/gh/yegor256/tacit@gh-pages/tacit-css.min.css"
-            >
-              tacit
-            </option>
-            <option
-              value="https://cdn.jsdelivr.net/gh/edwardtufte/tufte-css/tufte.min.css"
-            >
-              Tufte
-            </option>
-            <!--option value="https://www.w3.org/StyleSheets/Core/Modernist">W3C Core Styles</option-->
-            <option
-              value="https://cdn.jsdelivr.net/npm/water.css@2/out/water.min.css"
-            >
-              water
-            </option>
-            <option value="https://writ.cmcenroe.me/1.0.4/writ.min.css">
-              Writ
-            </option>
-            <!--option value="https://cdn.jsdelivr.net/gh/metakirby5/yorha/dist/yorha.min.css">YoRHa</option-->
-            <option value="https://classless.de/classless.css">
-              Classless
-            </option>
-            <!--option value="https://cdn.jsdelivr.net/npm/bullframe.css">
+          <!--option value="https://cdn.jsdelivr.net/gh/oxalorg/sakura/css/sakura.css">sakura</option-->
+          <option value="https://cdn.jsdelivr.net/npm/spcss">SPCSS</option>
+          <!--option value="https://unpkg.com/style.css">style.css</option-->
+          <!--option value="https://cdn.jsdelivr.net/gh/vasanthv/stylize.css/blob/master/stylize.min.css">Stylize.css</option-->
+          <option value="https://cdn.jsdelivr.net/gh/yegor256/tacit@gh-pages/tacit-css.min.css">
+            tacit
+          </option>
+          <option value="https://cdn.jsdelivr.net/gh/edwardtufte/tufte-css/tufte.min.css">
+            Tufte
+          </option>
+          <!--option value="https://www.w3.org/StyleSheets/Core/Modernist">W3C Core Styles</option-->
+          <option value="https://cdn.jsdelivr.net/npm/water.css@2/out/water.min.css">
+            water
+          </option>
+          <option value="https://writ.cmcenroe.me/1.0.4/writ.min.css">
+            Writ
+          </option>
+          <!--option value="https://cdn.jsdelivr.net/gh/metakirby5/yorha/dist/yorha.min.css">YoRHa</option-->
+          <option value="https://classless.de/classless.css">
+            Classless
+          </option>
+          <!--option value="https://cdn.jsdelivr.net/npm/bullframe.css">
             bullframe
           </option-->
-          </select>
-        </form>
-      </section>
-    </main>
-    <footer>
-      <p>Simplodon</p>
-    </footer>
-  </body>
+        </select>
+      </form>
+    </section>
+  </main>
+  <footer>
+    <p>Simplodon</p>
+  </footer>
+</body>
+
 </html>

@@ -5,6 +5,8 @@ export default (host) => {
     faviconHtml: () =>
       img(['inline'], {
         src: `https://${host}/favicon.ico`,
+        width: 48,
+        height: 48,
         alt: host
       })
   })

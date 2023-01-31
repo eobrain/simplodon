@@ -1,5 +1,5 @@
 import Host from './Host.js'
-import { a, em, h3, img, sub } from 'https://unpkg.com/ez-html-elements'
+import { a, em, h2, img, sub } from 'https://unpkg.com/ez-html-elements'
 
 /** Create an account object from the JSON returned from the server. */
 export default (account) => {
@@ -15,11 +15,13 @@ export default (account) => {
       return (
         a(
           { href: `#accounts/${account.id}` },
-          h3(
+          h2(
             ' @' +
               account.username +
               img(['inline'], {
                 src: account.avatar,
+                width: 48,
+                height: 48,
                 alt: `@${account.username}`
               }) +
               ' ' +

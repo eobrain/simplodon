@@ -24,7 +24,7 @@ export default (attachment, isSensitive) => {
           a(
             { href: attachment.url },
             img({
-              alt: attachment.description,
+              alt: attachment.description || 'attachment',
               src: attachment.preview_url,
               width,
               height

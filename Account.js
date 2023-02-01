@@ -1,5 +1,5 @@
 import Host from './Host.js'
-import { a, em, h2, img, sub } from 'https://unpkg.com/ez-html-elements'
+import { a, em, img, p } from 'https://unpkg.com/ez-html-elements'
 
 /** Create an account object from the JSON returned from the server. */
 export default (account) => {
@@ -12,22 +12,20 @@ export default (account) => {
     html: () => {
       const accountServer = account.url.match(/https:\/\/([^/]+)\//)[1]
 
-      return (
-        a(
-          { href: `#accounts/${account.id}` },
-          h2(
-            ' @' +
-              account.username +
-              img(['inline'], {
-                src: account.avatar,
-                width: 48,
-                height: 48,
-                alt: `@${account.username}`
-              }) +
-              ' ' +
-              sub('@' + accountServer + Host(accountServer).faviconHtml())
-          )
-        ) + em(account.display_name)
+      return a(
+        { href: `#accounts/${account.id}` },
+        img(['inline'], {
+          src: account.avatar,
+          width: 48,
+          height: 48,
+          alt: `@${account.username}`
+        }) +
+          Host(accountServer).faviconHtml() +
+          '@' +
+          account.username +
+          '@' +
+          accountServer,
+        em('(' + account.display_name + ')')
       )
     }
   })

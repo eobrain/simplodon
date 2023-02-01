@@ -1,10 +1,10 @@
-import { a, aside, img, p } from 'https://unpkg.com/ez-html-elements'
+import { a, aside, img, p, strong } from 'https://unpkg.com/ez-html-elements'
 
 /** Create a card object from the JSON returned from the server. */
 export default (card) => {
   // Card PRIVATE:
   const caption =
-    a({ href: card.url }, card.title) +
+    a({ href: card.url }, strong(card.title)) +
     (card.description ? p(card.description) : '')
 
   // Card PUBLIC:

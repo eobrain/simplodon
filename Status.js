@@ -4,20 +4,13 @@ import Attachment from './Attachment.js'
 import Card from './Card.js'
 import Host from './Host.js'
 import HtmlDate from './HtmlDate.js'
-import {
-  details,
-  div,
-  em,
-  p,
-  section,
-  summary,
-  sub
-} from 'https://unpkg.com/ez-html-elements'
+import { details, div, p, summary } from 'https://unpkg.com/ez-html-elements'
 
 /** Creates a Status object from the JSON returned from the server. */
 function Status (status) {
   // Status PRIVATE:
   const account = Account(status.account)
+  const createdAt = HtmlDate(status.created_at)
 
   const attachmentListHtml = (as, isSensitive) =>
     as.map((a) => Attachment(a, isSensitive).html()).join('')
@@ -25,17 +18,10 @@ function Status (status) {
   function html () {
     const mediaSection =
       status.media_attachments && status.media_attachments.length > 0
-        ? section(
-          attachmentListHtml(status.media_attachments, status.sensitive)
-        )
+        ? attachmentListHtml(status.media_attachments, status.sensitive)
         : ''
     const cardHtml = status.card ? Card(status.card).html() : ''
-    const createdAt = HtmlDate(status.created_at)
-    const contentSection = section(
-      cardHtml,
-      status.content,
-      p(em(createdAt.html()))
-    )
+    const contentSection = cardHtml + status.content
     return status.spoiler_text
       ? details(summary(status.spoiler_text), contentSection + mediaSection)
       : div(contentSection + mediaSection)
@@ -50,9 +36,11 @@ function Status (status) {
       if (parsed) {
         const [, mentionedServer, mentionedPerson] = parsed
         a.innerHTML =
+          Host(mentionedServer).faviconHtml() +
           '@' +
           mentionedPerson +
-          sub('@' + mentionedServer + Host(mentionedServer).faviconHtml())
+          '@' +
+          mentionedServer
       }
     })
   }
@@ -67,14 +55,20 @@ function Status (status) {
     /** Insert into the given parent element the HTML text for this post and any preceding posts in the thread. */
     thread: async ($parent) => {
       if (status.reblog) {
-        $parent.insertAdjacentHTML('beforeend', section(account.html() + '♻️'))
+        $parent.insertAdjacentHTML(
+          'beforeend',
+          p(account.html(), createdAt.html()) + '♻️'
+        )
         const $subArticle = document.createElement('article')
         Status(status.reblog).thread($subArticle)
         $parent.append($subArticle)
         return
       }
 
-      $parent.insertAdjacentHTML('beforeend', section(account.html()) + html())
+      $parent.insertAdjacentHTML(
+        'beforeend',
+        p(account.html(), createdAt.html()) + html()
+      )
       filterStatus($parent.lastElementChild)
       if (status.in_reply_to_id) {
         const $details = document.createElement('details')
@@ -91,7 +85,10 @@ function Status (status) {
       $sibling.insertAdjacentHTML('afterend', html())
       filterStatus($sibling.nextElementSibling)
       if (!account.sameId(status.in_reply_to_account_id)) {
-        $sibling.insertAdjacentHTML('afterend', section(account.html()))
+        $sibling.insertAdjacentHTML(
+          'afterend',
+          p(account.html(), createdAt.html())
+        )
       }
       if (status.in_reply_to_id) {
         fetchAndAddAfter($sibling, status.in_reply_to_id) // no await, so happens asynchronously

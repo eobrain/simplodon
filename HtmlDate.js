@@ -1,6 +1,4 @@
-import { p, time } from 'https://unpkg.com/ez-html-elements'
-
-const DAY_MS = 24 * 60 * 60 * 1000
+import { time } from 'https://unpkg.com/ez-html-elements'
 
 /** Create a date object from a standard string representation */
 export default (dateString) => {

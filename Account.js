@@ -1,5 +1,5 @@
 import Host from './Host.js'
-import { a, em, img, p } from 'https://unpkg.com/ez-html-elements'
+import { a, em, img } from 'https://unpkg.com/ez-html-elements'
 
 /** Create an account object from the JSON returned from the server. */
 export default (account) => {

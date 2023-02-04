@@ -25,6 +25,21 @@ article {
   clear: right;
 }
 
-sub {
-  white-space: pre;
+.fav::before {
+  content: "🤍"
 }
+.fav:checked::before {
+  content: "❤️"
+}
+
+.boost::before {
+  content: "♺"
+}
+.boost:checked::before {
+  content: "♻️"
+}
+
+.bookmark::before {
+  content: "🔖";
+}
+

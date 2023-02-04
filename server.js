@@ -172,6 +172,33 @@ export default (() => {
         )
       ).json(),
 
+    /** fav or unfav a status, sent asynchronously without waiting for the result */
+    fav: (statusId, isfaved) => {
+      const command = isfaved ? 'favourite' : 'unfavourite'
+      fetch(`https://${$server.value}/api/v1/statuses/${statusId}/${command}`, {
+        method: 'POST',
+        headers
+      })
+    },
+
+    /** boost or unboost a status, sent asynchronously without waiting for the result */
+    boost: (statusId, isboosted) => {
+      const command = isboosted ? 'reblog' : 'unreblog'
+      fetch(`https://${$server.value}/api/v1/statuses/${statusId}/${command}`, {
+        method: 'POST',
+        headers
+      })
+    },
+
+    /** bookmark or unbookmark a status, sent asynchronously without waiting for the result */
+    bookmark: (statusId, isBookmarked) => {
+      const command = isBookmarked ? 'bookmark' : 'unbookmark'
+      fetch(`https://${$server.value}/api/v1/statuses/${statusId}/${command}`, {
+        method: 'POST',
+        headers
+      })
+    },
+
     /** View or hide nav buttons depending on whether hostname is set and user is logged in. */
     updateNavButtons
   })

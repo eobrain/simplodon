@@ -4,7 +4,13 @@ import Attachment from './Attachment.js'
 import Card from './Card.js'
 import Host from './Host.js'
 import HtmlDate from './HtmlDate.js'
-import { details, div, p, summary } from 'https://unpkg.com/ez-html-elements'
+import {
+  details,
+  div,
+  input,
+  p,
+  summary
+} from 'https://unpkg.com/ez-html-elements'
 
 /** Creates a Status object from the JSON returned from the server. */
 function Status (status) {
@@ -30,6 +36,7 @@ function Status (status) {
   function filterStatus ($status) {
     $status.querySelectorAll('a.hashtag').forEach((a) => {
       a.href = a.href.replace(/^.*\/tags\/(.+)$/, '#tags/$1')
+      a.removeAttribute('target') // stay in current window
     })
     $status.querySelectorAll('a.u-url').forEach((a) => {
       const parsed = a.href.match(/^https:\/\/(.+)\/@(.+)$/)
@@ -49,26 +56,67 @@ function Status (status) {
     const inReplyTo = Status(await server.status(status.in_reply_to_id))
     inReplyTo.addAfter($summary)
   }
+  const favId = `fav-${status.id}`
+  const boostId = `boost-${status.id}`
+  const bookmarkId = `bookmark-${status.id}`
+
+  const favHtml = input(['fav'], {
+    id: favId,
+    type: 'checkbox',
+    checked: status.favourited
+  })
+  const boostHtml = input(['boost'], {
+    id: boostId,
+    type: 'checkbox',
+    checked: status.reblogged
+  })
+  const bookmarkHtml = input(['bookmark'], {
+    id: bookmarkId,
+    type: 'checkbox',
+    checked: status.bookmarked
+  })
+  const header = p(
+    account.html(),
+    createdAt.html(),
+    favHtml,
+    boostHtml,
+    bookmarkHtml
+  )
+  function nextTick (callback) {
+    setTimeout(callback, 0)
+  }
+  function addListeners () {
+    nextTick(() => {
+      const $fav = document.querySelector('#' + favId)
+      const $boost = document.querySelector('#' + boostId)
+      const $bookmark = document.querySelector('#' + bookmarkId)
+      $fav.addEventListener('change', () => {
+        server.fav(status.id, $fav.checked)
+      })
+      $boost.addEventListener('change', () => {
+        server.boost(status.id, $boost.checked)
+      })
+      $bookmark.addEventListener('change', () => {
+        server.bookmark(status.id, $bookmark.checked)
+      })
+    })
+  }
 
   // Status PUBLIC:
   return Object.freeze({
     /** Insert into the given parent element the HTML text for this post and any preceding posts in the thread. */
     thread: async ($parent) => {
       if (status.reblog) {
-        $parent.insertAdjacentHTML(
-          'beforeend',
-          p(account.html(), createdAt.html()) + '♻️'
-        )
+        $parent.insertAdjacentHTML('beforeend', header + '♻️')
+        addListeners()
         const $subArticle = document.createElement('article')
         Status(status.reblog).thread($subArticle)
         $parent.append($subArticle)
         return
       }
 
-      $parent.insertAdjacentHTML(
-        'beforeend',
-        p(account.html(), createdAt.html()) + html()
-      )
+      $parent.insertAdjacentHTML('beforeend', header + html())
+      addListeners()
       filterStatus($parent.lastElementChild)
       if (status.in_reply_to_id) {
         const $details = document.createElement('details')
@@ -85,10 +133,8 @@ function Status (status) {
       $sibling.insertAdjacentHTML('afterend', html())
       filterStatus($sibling.nextElementSibling)
       if (!account.sameId(status.in_reply_to_account_id)) {
-        $sibling.insertAdjacentHTML(
-          'afterend',
-          p(account.html(), createdAt.html())
-        )
+        $sibling.insertAdjacentHTML('afterend', header)
+        addListeners()
       }
       if (status.in_reply_to_id) {
         fetchAndAddAfter($sibling, status.in_reply_to_id) // no await, so happens asynchronously
